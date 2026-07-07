@@ -4,9 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
+  <meta name="description" content="StadiumMind AI — Real-time crowd, venue, volunteer, and security operations for FIFA World Cup 2026.">
   <title>{% block title %}StadiumMind AI{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;800&family=Bebas+Neue&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;800&family=Bebas+Neue&display=swap">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
@@ -17,9 +20,9 @@
 </head>
 <body class="app-body {{ body_class|default('') }}">
   <a class="skip-link" href="#main-content">Skip to main content</a>
-  <header class="topbar glass-panel" role="banner">
+  <header class="topbar glass-panel" role="banner" aria-label="StadiumMind AI application header">
     <div class="brand-block">
-      <a class="brand-link" href="{{ url_for('core.landing') }}" aria-label="StadiumMind home">
+      <a class="brand-link" href="{{ url_for('core.landing') }}" aria-label="StadiumMind AI — return to home">
         <span class="brand-mark" aria-hidden="true">S</span>
         <span class="brand-copy">
           <span class="eyebrow">FIFA World Cup 2026</span>
@@ -29,8 +32,8 @@
       </a>
     </div>
 
-    <div class="toolbar" aria-label="Accessibility controls">
-      <span class="high-contrast-hint" data-high-contrast-hint>Keyboard-friendly. Adjustable text size.</span>
+    <nav class="toolbar" aria-label="Accessibility controls">
+      <span class="high-contrast-hint" data-high-contrast-hint aria-hidden="true"></span>
       <label class="language-control" for="ui-language-select">
         <span class="sr-only">UI language</span>
         <select id="ui-language-select" class="form-select form-select-sm" data-language-select aria-label="Select interface language">
@@ -46,17 +49,27 @@
       <button type="button" class="btn btn-ghost btn-sm" data-font-reset aria-label="Reset font size">AA</button>
       <button type="button" class="btn btn-ghost btn-sm" data-font-increase aria-label="Increase font size">A+</button>
       {% if session.get('role') %}
-        <a class="btn btn-primary btn-sm" href="{{ url_for('core.switch_role') }}">Switch role</a>
+        <a class="btn btn-primary btn-sm" href="{{ url_for('core.switch_role') }}" aria-label="Switch to a different role">Switch role</a>
       {% endif %}
-    </div>
+    </nav>
   </header>
 
   <main id="main-content" class="page-shell" tabindex="-1">
     {% block content %}{% endblock %}
   </main>
 
-  <footer class="page-footer" role="contentinfo">
-    <div>StadiumMind AI tracks crowd, venue, volunteer, and security operations in real time.</div>
+  <footer class="page-footer" role="contentinfo" aria-label="Site footer">
+    <div class="page-footer__brand">
+      <span aria-hidden="true">🏟️</span>
+      <span>StadiumMind AI &copy; 2026 — FIFA World Cup Smart Stadium Operations</span>
+    </div>
+    <nav class="page-footer__links" aria-label="Footer navigation">
+      <a href="{{ url_for('core.landing') }}">Home</a>
+      <a href="{{ url_for('core.health') }}">Health check</a>
+      {% if session.get('role') %}
+        <a href="{{ url_for('core.switch_role') }}">Switch role</a>
+      {% endif %}
+    </nav>
   </footer>
 </body>
 </html>

@@ -1,51 +1,95 @@
 {% extends "base.html" %}
-{% from "components.html" import badge, section_header, stat_card, ai_recommendation_panel, weather_widget, sustainability_widget, status_widget %}
+{% from "components.html" import badge, section_header, stat_card, ai_recommendation_panel, weather_widget, sustainability_widget, status_widget, empty_state, role_nav %}
 
-{% block title %}Security Command | StadiumMind AI{% endblock %}
+{% block title %}Security Command Center | StadiumMind AI{% endblock %}
 {% block body_class %}security-command{% endblock %}
 
 {% block content %}
-<section class="hero">
-  <div class="hero-panel glass-panel">
+{{ role_nav('security', 'command') }}
+
+<section class="hero" aria-labelledby="security-hero-heading">
+  <div class="hero-panel glass-panel animate-fade-in-up">
     <div class="hero-kicker">Security command center</div>
-    <h1 class="hero-title">Monitor incidents and response readiness.</h1>
-    <p class="hero-copy">Track active incidents, trigger classifications, and coordinate operational response from a single dashboard.</p>
+    <h1 class="hero-title" id="security-hero-heading">Monitor incidents and response readiness.</h1>
+    <p class="hero-copy">Track active incidents, trigger AI classifications, and coordinate operational response from a single dashboard.</p>
+    <div class="hero-actions">
+      <a class="btn btn-danger" href="{{ url_for('security.incidents') }}" aria-label="Open full incident list">🚨 All incidents</a>
+    </div>
   </div>
-  <aside class="panel glass-panel">
+  <aside class="panel glass-panel animate-scale-in delay-100" aria-labelledby="incident-status-heading">
     {{ section_header('Incident status', 'Current command view') }}
-    {{ stat_card('Active incidents', active_count, 'Requires attention', 'danger', '🚨') }}
+    {{ stat_card('Active incidents', active_count, 'Requiring immediate attention', 'danger', '🚨') }}
+    {% if active_count > 0 %}
+      <div class="alert alert-danger mt-4" role="alert" aria-live="assertive">
+        <span aria-hidden="true">🚨</span>
+        <span>{{ active_count }} active incident{{ 's' if active_count != 1 else '' }} require response. Review and classify below.</span>
+      </div>
+    {% else %}
+      <div class="alert alert-success mt-4" role="status">
+        <span aria-hidden="true">✅</span>
+        <span>No active incidents. All zones are clear.</span>
+      </div>
+    {% endif %}
   </aside>
 </section>
 
-<section class="section mt-8 dashboard-grid">
+<section class="section mt-8 dashboard-grid" aria-label="Active incidents and situational status">
   <div class="dashboard-column">
     <div class="panel glass-panel">
       {{ section_header('Active incidents', 'Classify or review each record') }}
-      <div class="list-stack">
+      <div class="list-stack" role="list" aria-label="Active incident list">
         {% for incident in incidents %}
-          <article class="tree-item">
+          <article class="tree-item"
+                   role="listitem"
+                   aria-labelledby="cmd-incident-{{ incident.id }}"
+                   {% if incident.severity in ['critical', 'high'] %}aria-describedby="cmd-incident-severity-{{ incident.id }}"{% endif %}>
             <div class="flex justify-between items-center gap-4 flex-wrap">
-              <strong>{{ incident.zone_name }}</strong>
+              <div>
+                <strong id="cmd-incident-{{ incident.id }}">{{ incident.zone_name }}</strong>
+                <p class="text-muted text-sm" style="margin:0.15rem 0 0">{{ incident.type|title }}</p>
+              </div>
               <div class="chips">
                 {{ badge(incident.severity|title, 'danger' if incident.severity in ['critical', 'high'] else 'warning') }}
                 {{ badge(incident.status|title, 'info') }}
               </div>
             </div>
-            <p>{{ incident.description }}</p>
-            <div class="flex gap-3 flex-wrap">
-              <button type="button" class="btn btn-primary btn-sm" data-classify-incident="{{ incident.id }}">Classify</button>
+            <p id="{% if incident.severity in ['critical', 'high'] %}cmd-incident-severity-{{ incident.id }}{% endif %}">{{ incident.description }}</p>
+            <div class="flex gap-3 flex-wrap" style="margin-top:var(--space-3)">
+              <button type="button"
+                      class="btn btn-primary btn-sm"
+                      data-classify-incident="{{ incident.id }}"
+                      aria-label="Classify incident in zone {{ incident.zone_name }}"
+                      aria-controls="cmd-output-{{ incident.id }}">
+                ✨ Classify
+              </button>
             </div>
-            <div class="result-panel mt-3" data-incident-output="{{ incident.id }}"></div>
+            <div class="result-panel mt-3"
+                 id="cmd-output-{{ incident.id }}"
+                 data-incident-output="{{ incident.id }}"
+                 aria-live="polite"
+                 aria-label="AI classification result for {{ incident.zone_name }}">
+            </div>
           </article>
+        {% else %}
+          {{ empty_state('No active incidents', 'All zones are currently clear. New incidents will appear here when logged.', '✅') }}
         {% endfor %}
       </div>
     </div>
   </div>
+
   <div class="dashboard-column">
-    {{ status_widget('Incident severity', active_count and 'Warning' or 'Info', active_count and 'warning' or 'info', [{'label': 'Active incidents', 'value': active_count}, {'label': 'Open protocols', 'value': 'Crowd, medical, access'}, {'label': 'Crowd status', 'value': 'High'}]) }}
-    {{ ai_recommendation_panel('Why this recommendation?', 'Security intelligence', 'The classification is driven by incident severity, response protocol, and access-route risk.') }}
+    {{ status_widget('Incident severity',
+       'Warning' if active_count else 'Info',
+       'warning' if active_count else 'info',
+       [
+         {'label': 'Active incidents', 'value': active_count},
+         {'label': 'Open protocols', 'value': 'Crowd, medical, access'},
+         {'label': 'Crowd status', 'value': 'High' if active_count else 'Normal'}
+       ]) }}
+    {{ ai_recommendation_panel('Why this recommendation?', 'Security intelligence',
+       'The AI classification is driven by incident severity, response protocol, and access-route risk. Critical incidents trigger immediate escalation recommendations.') }}
     {{ weather_widget('wind', '20°C', 'Sheltered movement is recommended for response teams', '🌬️') }}
-    {{ sustainability_widget('Water refill station near command', 'Walk when moving between adjacent zones', 'Dispose of incident waste according to protocol', '13 kg CO2e saved (mock)') }}
+    {{ sustainability_widget('Water refill station near command', 'Walk when moving between adjacent zones', 'Dispose of incident waste according to protocol', '13 kg CO₂e saved (mock)') }}
   </div>
 </section>
 {% endblock %}

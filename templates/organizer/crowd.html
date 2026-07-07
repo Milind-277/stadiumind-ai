@@ -1,41 +1,75 @@
 {% extends "base.html" %}
-{% from "components.html" import badge, section_header, stat_card, ai_recommendation_panel, weather_widget, sustainability_widget, status_widget %}
+{% from "components.html" import badge, section_header, stat_card, ai_recommendation_panel, weather_widget, sustainability_widget, status_widget, role_nav %}
 
-{% block title %}Organizer Crowd | StadiumMind AI{% endblock %}
+{% block title %}Crowd Operations | StadiumMind AI{% endblock %}
 {% block body_class %}organizer-crowd{% endblock %}
 
 {% block content %}
-<section class="hero">
-  <div class="hero-panel glass-panel">
+{{ role_nav('organizer', 'crowd') }}
+
+<section class="hero" aria-labelledby="crowd-hero-heading">
+  <div class="hero-panel glass-panel animate-fade-in-up">
     <div class="hero-kicker">Crowd operations</div>
-    <h1 class="hero-title">Inspect crowd flow on demand.</h1>
+    <h1 class="hero-title" id="crowd-hero-heading">Inspect crowd flow on demand.</h1>
     <p class="hero-copy">Load live crowd data for any venue and inspect occupancy, bottlenecks, and current flow conditions.</p>
   </div>
-  <aside class="panel glass-panel">
+  <aside class="panel glass-panel animate-scale-in delay-100" aria-label="Crowd lookup info">
     {{ section_header('Live lookup', 'Use the current venue identifier') }}
-    {{ stat_card('Default venue', 'v001', 'Change the venue ID if needed', 'blue', '🏟️') }}
+    {{ stat_card('Default venue', 'v001', 'Edit the venue ID in the form to change context', 'blue', '🏟️') }}
+    <div class="notice mt-4" role="note" aria-label="Data freshness note">
+      <span aria-hidden="true">ℹ️</span>
+      <div>
+        <strong>Live data</strong>
+        <span>Crowd snapshots are served from the in-memory JSON store and reflect the latest recorded occupancy per zone.</span>
+      </div>
+    </div>
   </aside>
 </section>
 
-<section class="section mt-8 dashboard-grid">
+<section class="section mt-8 dashboard-grid" aria-label="Crowd data and analysis">
   <div class="dashboard-column">
     <div class="panel glass-panel">
-      {{ section_header('Load live crowd data', 'Powered by the existing organizer API') }}
-      <form class="inline-form" data-organizer-crowd-form>
+      {{ section_header('Load live crowd data', 'Powered by the organizer API') }}
+      <form class="inline-form" data-organizer-crowd-form aria-label="Crowd data request form">
         <div class="form-group">
           <label class="form-label" for="crowd-venue">Venue ID</label>
-          <input class="form-input" id="crowd-venue" name="venue_id" type="text" value="v001" aria-label="Venue identifier">
+          <input class="form-input" id="crowd-venue" name="venue_id" type="text"
+                 value="v001"
+                 aria-label="Venue identifier — enter the venue code to load crowd data"
+                 aria-describedby="crowd-venue-hint"
+                 autocomplete="off">
+          <span class="form-label text-muted" id="crowd-venue-hint" style="font-weight:400;font-size:var(--text-xs)">
+            Default: v001 — the main demo venue
+          </span>
         </div>
-        <button type="submit" class="btn btn-primary">Refresh</button>
+        <button type="submit" class="btn btn-primary" aria-label="Refresh crowd data for this venue">
+          Refresh
+        </button>
       </form>
-      <div class="result-panel mt-4" data-organizer-crowd-output></div>
+
+      <div class="result-panel mt-4"
+           id="crowd-output"
+           data-organizer-crowd-output
+           aria-live="polite"
+           aria-label="Live crowd data result">
+        <div class="empty-state" data-icon="👥">
+          <h3>No data loaded yet</h3>
+          <p>Submit the form above to load the latest crowd snapshot for this venue.</p>
+        </div>
+      </div>
     </div>
   </div>
+
   <div class="dashboard-column">
-    {{ status_widget('Crowd status', 'High', 'high', [{'label': 'Occupancy', 'value': 'Live snapshot'}, {'label': 'Bottlenecks', 'value': 'Visible'}, {'label': 'Flow control', 'value': 'Required'}]) }}
-    {{ ai_recommendation_panel('Why this recommendation?', 'Crowd analysis', 'The output is based on the live occupancy snapshot and the current bottleneck list.') }}
+    {{ status_widget('Crowd status', 'High', 'high', [
+      {'label': 'Occupancy', 'value': 'Live snapshot'},
+      {'label': 'Bottlenecks', 'value': 'Visible after refresh'},
+      {'label': 'Flow control', 'value': 'Monitor after load'}
+    ]) }}
+    {{ ai_recommendation_panel('Why this recommendation?', 'Crowd analysis',
+       'The output is based on the live occupancy snapshot and the current bottleneck list. High-density zones trigger immediate routing recommendations.') }}
     {{ weather_widget('wind', '20°C', 'Use sheltered routes when moving between crowd hot spots', '🌬️') }}
-    {{ sustainability_widget('Water refill station in the concourse', 'Walking is recommended for short redistribution moves', 'Dispose of waste at the nearest marked bin', '13 kg CO2e saved (mock)') }}
+    {{ sustainability_widget('Water refill station in the concourse', 'Walking is recommended for short redistribution moves', 'Dispose of waste at the nearest marked bin', '13 kg CO₂e saved (mock)') }}
   </div>
 </section>
 {% endblock %}

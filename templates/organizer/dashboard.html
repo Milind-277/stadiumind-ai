@@ -1,17 +1,23 @@
 {% extends "base.html" %}
-{% from "components.html" import badge, stat_card, section_header, empty_state, list_item, ai_recommendation_panel, weather_widget, sustainability_widget, status_widget %}
+{% from "components.html" import badge, stat_card, section_header, empty_state, list_item, ai_recommendation_panel, weather_widget, sustainability_widget, status_widget, role_nav %}
 
 {% block title %}Organizer Dashboard | StadiumMind AI{% endblock %}
 {% block body_class %}organizer-dashboard{% endblock %}
 
 {% block content %}
-<section class="hero">
-  <div class="hero-panel glass-panel">
+{{ role_nav('organizer', 'dashboard') }}
+
+<section class="hero" aria-labelledby="organizer-hero-heading">
+  <div class="hero-panel glass-panel animate-fade-in-up">
     <div class="hero-kicker">Organizer dashboard</div>
-    <h1 class="hero-title">One operational view for the whole venue.</h1>
+    <h1 class="hero-title" id="organizer-hero-heading">One operational view for the whole venue.</h1>
     <p class="hero-copy">Review crowd pressure, active incidents, volunteer coverage, and live match traffic from a single responsive interface.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="{{ url_for('organizer.crowd') }}" aria-label="Open live crowd operations">👥 Crowd ops</a>
+      <a class="btn btn-ghost" href="{{ url_for('organizer.reports') }}" aria-label="Open reports and alerts">📋 Reports</a>
+    </div>
   </div>
-  <aside class="panel glass-panel">
+  <aside class="panel glass-panel animate-scale-in delay-100" aria-labelledby="system-status-heading">
     {{ section_header('System status', 'Current operational indicators') }}
     <div class="detail-list">
       {{ stat_card('Active incidents', summary.total_active_incidents, 'Open or investigating', 'danger', '⚠️') }}
@@ -21,22 +27,54 @@
   </aside>
 </section>
 
-<section class="section mt-8 dashboard-grid">
+<section class="section mt-8 dashboard-grid" aria-label="Venue overview and operational status">
   <div class="dashboard-column">
     <div class="panel glass-panel">
       {{ section_header('Venue overview', 'Crowd and operational snapshot by venue') }}
-      <div class="list-stack">
+      <div class="list-stack" role="list" aria-label="Venue status list">
         {% for venue in summary.venues %}
-          {{ list_item(venue.venue_name, venue.city ~ ' · ' ~ venue.occupancy_pct ~ '% occupancy', venue.bottleneck_count ~ ' bottlenecks', 'warning' if venue.bottleneck_count else 'success') }}
+          <div role="listitem">
+            {{ list_item(
+              venue.venue_name,
+              venue.city ~ ' · ' ~ venue.occupancy_pct ~ '% occupancy',
+              venue.bottleneck_count ~ ' bottleneck' ~ ('s' if venue.bottleneck_count != 1 else ''),
+              'warning' if venue.bottleneck_count else 'success'
+            ) }}
+          </div>
         {% else %}
-          {{ empty_state('No venue snapshots available', 'Crowd data will appear once live snapshots are loaded.') }}
+          {{ empty_state('No venue snapshots available', 'Crowd data will appear once live snapshots are loaded.', '🏟️') }}
         {% endfor %}
       </div>
     </div>
+
+    <div class="panel glass-panel mt-4">
+      {{ section_header('Alert status', 'Active venue-level alerts') }}
+      {% if summary.alert_active %}
+        <div class="alert alert-warning" role="alert" aria-live="assertive">
+          <span aria-hidden="true">⚠️</span>
+          <span>One or more venues have active crowd alerts. Review crowd ops and consider broadcasting an update.</span>
+        </div>
+      {% else %}
+        <div class="alert alert-success" role="status">
+          <span aria-hidden="true">✅</span>
+          <span>No active venue alerts. All systems operating normally.</span>
+        </div>
+      {% endif %}
+    </div>
   </div>
+
   <div class="dashboard-column">
-    {{ status_widget('Live crowd status', summary.alert_active and 'High' or 'Medium', summary.alert_active and 'high' or 'medium', [{'label': 'Active incidents', 'value': summary.total_active_incidents}, {'label': 'Live matches', 'value': summary.live_matches}, {'label': 'Available volunteers', 'value': summary.available_volunteers}]) }}
-    {{ ai_recommendation_panel('Why this recommendation?', 'Operational intelligence', 'The dashboard prioritises live crowd load, active incidents, and resource readiness.') }}
+    {{ status_widget('Live crowd status',
+       'High' if summary.alert_active else 'Medium',
+       'high' if summary.alert_active else 'medium',
+       [
+         {'label': 'Active incidents', 'value': summary.total_active_incidents},
+         {'label': 'Live matches', 'value': summary.live_matches},
+         {'label': 'Available volunteers', 'value': summary.available_volunteers},
+         {'label': 'Total venues', 'value': summary.venues|length}
+       ]) }}
+    {{ ai_recommendation_panel('Why this recommendation?', 'Operational intelligence',
+       'The dashboard prioritises live crowd load, active incidents, and resource readiness to surface the most urgent operational signals.') }}
     {{ weather_widget('rain', '18°C', 'Weather is affecting crowd movement and route preference', '🌧️') }}
     {{ sustainability_widget('Water refill station near operations', 'Encourage staff to walk between nearby zones', 'Use sorted waste streams in command areas', '16 kg CO₂e saved (mock)') }}
   </div>

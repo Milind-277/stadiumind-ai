@@ -1,32 +1,34 @@
 {% extends "base.html" %}
-{% from "components.html" import badge, match_card, section_header, stat_card, empty_state, ai_recommendation_panel, weather_widget, sustainability_widget, status_widget %}
+{% from "components.html" import badge, match_card, section_header, stat_card, empty_state, ai_recommendation_panel, weather_widget, sustainability_widget, status_widget, role_nav %}
 
-{% block title %}Fan Dashboard | StadiumMind AI{% endblock %}
+{% block title %}Fan Dashboard | StadiumMind AI — FIFA World Cup 2026{% endblock %}
 {% block body_class %}fan-dashboard{% endblock %}
 
 {% block content %}
-<section class="hero">
+{{ role_nav('fan', 'home') }}
+
+<section class="hero" aria-labelledby="fan-hero-heading">
   <div class="hero-panel glass-panel animate-fade-in-up">
     <div class="hero-kicker">Fan dashboard</div>
-    <h1 class="hero-title">Move confidently through the stadium.</h1>
+    <h1 class="hero-title" id="fan-hero-heading">Move confidently through the stadium.</h1>
     <p class="hero-copy">
       Find the latest match list, identify live action, and open fan tools for wayfinding and chat support.
     </p>
     <div class="hero-actions">
-      <a class="btn btn-primary" href="{{ url_for('fan.wayfinding') }}">Wayfinding</a>
-      <a class="btn btn-ghost" href="{{ url_for('fan.chat') }}">Chat assistant</a>
-      <a class="btn btn-ghost" href="{{ url_for('fan.schedule') }}">Full schedule</a>
+      <a class="btn btn-primary" href="{{ url_for('fan.wayfinding') }}" aria-label="Open wayfinding route planner">🗺️ Wayfinding</a>
+      <a class="btn btn-ghost" href="{{ url_for('fan.chat') }}" aria-label="Open AI chat assistant">💬 Chat assistant</a>
+      <a class="btn btn-ghost" href="{{ url_for('fan.schedule') }}" aria-label="View full match schedule">📅 Full schedule</a>
     </div>
-    <div class="hero-meta">
+    <div class="hero-meta" aria-label="Platform highlights">
       <div class="meta-chip">Matches available<strong>{{ matches|length }}</strong></div>
-      <div class="meta-chip">Live match<strong>{{ live_match.home_team.name if live_match else 'None' }}</strong></div>
+      <div class="meta-chip">Live match<strong>{{ live_match.home_team.name ~ ' vs ' ~ live_match.away_team.name if live_match else 'None active' }}</strong></div>
     </div>
   </div>
 
-  <aside class="panel glass-panel animate-scale-in delay-100">
+  <aside class="panel glass-panel animate-scale-in delay-100" aria-labelledby="live-match-heading">
     <div class="section-heading">
       <div>
-        <h2 class="section-title">Live match</h2>
+        <h2 class="section-title" id="live-match-heading">Live match</h2>
         <p class="page-subtitle">Current match at a glance.</p>
       </div>
       {% if live_match %}{{ badge('Live', 'live') }}{% else %}{{ badge('No live match', 'ghost') }}{% endif %}
@@ -39,21 +41,23 @@
         <div class="detail-row"><span class="detail-label">Attendance</span><span class="detail-value">{{ live_match.attendance or 'N/A' }}</span></div>
       </div>
     {% else %}
-      {{ empty_state('No live match right now', 'Use the schedule to plan your arrival.') }}
+      {{ empty_state('No live match right now', 'Use the schedule to plan your arrival.', '⚽') }}
     {% endif %}
   </aside>
 </section>
 
-<section class="section mt-8">
+<section class="section mt-8" aria-labelledby="matches-heading">
   {{ section_header('Match overview', 'Top fixtures and current status') }}
-  <div class="list-stack">
+  <div class="list-stack" role="list" aria-labelledby="matches-heading">
     {% for match in matches[:4] %}
-      {{ match_card(match, match.is_live) }}
+      <div role="listitem">{{ match_card(match, match.is_live) }}</div>
+    {% else %}
+      {{ empty_state('No matches available', 'Match data will load from the backend.', '📅') }}
     {% endfor %}
   </div>
 </section>
 
-<section class="section mt-8 dashboard-grid">
+<section class="section mt-8 dashboard-grid" aria-label="Quick actions and status">
   <div class="dashboard-column">
     {{ section_header('Quick actions', 'Fast links for fans on the move') }}
     <div class="metrics-grid">
@@ -63,7 +67,11 @@
     </div>
   </div>
   <div class="dashboard-column">
-    {{ status_widget('Live crowd status', 'Medium', 'medium', [{'label': 'Live match', 'value': live_match.home_team.name if live_match else 'No live match'}, {'label': 'Route confidence', 'value': '88%'}, {'label': 'Incident severity', 'value': 'Info'}]) }}
+    {{ status_widget('Live crowd status', 'Medium', 'medium', [
+      {'label': 'Live match', 'value': live_match.home_team.name ~ ' vs ' ~ live_match.away_team.name if live_match else 'No live match'},
+      {'label': 'Route confidence', 'value': '88%'},
+      {'label': 'Incident severity', 'value': 'Info'}
+    ]) }}
     {{ ai_recommendation_panel('Why this recommendation?', 'Live fan guidance', 'Recommendations are based on live venue context, accessibility routes, and weather-aware movement.') }}
     {{ weather_widget('clear', '24°C', 'Direct routes remain the fastest option', '☀️') }}
     {{ sustainability_widget('Water refill station near the main concourse', 'Take the shortest indoor route when possible', 'Use the marked recycling stations', '12 kg CO₂e saved (mock)') }}

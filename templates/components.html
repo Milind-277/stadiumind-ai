@@ -23,12 +23,73 @@
 </div>
 {%- endmacro %}
 
-{% macro empty_state(title, body='') -%}
-<div class="empty-state">
+{% macro empty_state(title, body='', icon='📭') -%}
+<div class="empty-state" data-icon="{{ icon }}" role="status">
   <h3>{{ title }}</h3>
   {% if body %}<p>{{ body }}</p>{% endif %}
 </div>
 {%- endmacro %}
+
+{# ── Role nav macro — renders the in-page navigation for each role ─────── #}
+{% macro role_nav(role, current_page) -%}
+<nav class="role-nav" aria-label="{{ role|title }} navigation">
+  <a class="role-nav__back" href="{{ url_for('core.switch_role') }}" aria-label="Return to role selector">← Roles</a>
+  <span class="role-nav__divider" aria-hidden="true">/</span>
+  <div class="role-nav__links">
+    {% if role == 'fan' %}
+      <a class="role-nav__link role-nav__link--fan {{ 'active' if current_page == 'home' }}"
+         href="{{ url_for('fan.index') }}" aria-current="{{ 'page' if current_page == 'home' else 'false' }}">
+        🏠 Home
+      </a>
+      <a class="role-nav__link role-nav__link--fan {{ 'active' if current_page == 'wayfinding' }}"
+         href="{{ url_for('fan.wayfinding') }}" aria-current="{{ 'page' if current_page == 'wayfinding' else 'false' }}">
+        🗺️ Wayfinding
+      </a>
+      <a class="role-nav__link role-nav__link--fan {{ 'active' if current_page == 'chat' }}"
+         href="{{ url_for('fan.chat') }}" aria-current="{{ 'page' if current_page == 'chat' else 'false' }}">
+        💬 Chat
+      </a>
+      <a class="role-nav__link role-nav__link--fan {{ 'active' if current_page == 'schedule' }}"
+         href="{{ url_for('fan.schedule') }}" aria-current="{{ 'page' if current_page == 'schedule' else 'false' }}">
+        📅 Schedule
+      </a>
+    {% elif role == 'organizer' %}
+      <a class="role-nav__link {{ 'active' if current_page == 'dashboard' }}"
+         href="{{ url_for('organizer.index') }}" aria-current="{{ 'page' if current_page == 'dashboard' else 'false' }}">
+        📊 Dashboard
+      </a>
+      <a class="role-nav__link {{ 'active' if current_page == 'crowd' }}"
+         href="{{ url_for('organizer.crowd') }}" aria-current="{{ 'page' if current_page == 'crowd' else 'false' }}">
+        👥 Crowd
+      </a>
+      <a class="role-nav__link {{ 'active' if current_page == 'reports' }}"
+         href="{{ url_for('organizer.reports') }}" aria-current="{{ 'page' if current_page == 'reports' else 'false' }}">
+        📋 Reports
+      </a>
+    {% elif role == 'volunteer' %}
+      <a class="role-nav__link role-nav__link--volunteer {{ 'active' if current_page == 'console' }}"
+         href="{{ url_for('volunteer.index') }}" aria-current="{{ 'page' if current_page == 'console' else 'false' }}">
+        🖥️ Console
+      </a>
+      <a class="role-nav__link role-nav__link--volunteer {{ 'active' if current_page == 'tasks' }}"
+         href="{{ url_for('volunteer.tasks') }}" aria-current="{{ 'page' if current_page == 'tasks' else 'false' }}">
+        ✅ Tasks
+      </a>
+    {% elif role == 'security' %}
+      <a class="role-nav__link role-nav__link--security {{ 'active' if current_page == 'command' }}"
+         href="{{ url_for('security.index') }}" aria-current="{{ 'page' if current_page == 'command' else 'false' }}">
+        🛡️ Command
+      </a>
+      <a class="role-nav__link role-nav__link--security {{ 'active' if current_page == 'incidents' }}"
+         href="{{ url_for('security.incidents') }}" aria-current="{{ 'page' if current_page == 'incidents' else 'false' }}">
+        🚨 Incidents
+      </a>
+    {% endif %}
+  </div>
+</nav>
+{%- endmacro %}
+
+
 
 {% macro match_card(match, live=False) -%}
 <article class="match-card{% if live %} live{% endif %}" aria-label="{{ match.home_team.name }} versus {{ match.away_team.name }}">

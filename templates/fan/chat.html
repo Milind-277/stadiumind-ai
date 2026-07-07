@@ -1,42 +1,54 @@
 {% extends "base.html" %}
-{% from "components.html" import badge, section_header, empty_state %}
+{% from "components.html" import badge, section_header, empty_state, role_nav %}
 
 {% block title %}Fan Chat | StadiumMind AI{% endblock %}
 {% block body_class %}fan-chat{% endblock %}
 
 {% block content %}
-<section class="hero">
+{{ role_nav('fan', 'chat') }}
+
+<section class="hero" aria-labelledby="chat-hero-heading">
   <div class="hero-panel glass-panel">
     <div class="hero-kicker">Fan chat</div>
-    <h1 class="hero-title">Ask for help in plain language.</h1>
+    <h1 class="hero-title" id="chat-hero-heading">Ask for help in plain language.</h1>
     <p class="hero-copy">Chat about gates, food, accessibility, or the quickest path to your seat and the assistant will reply with actionable guidance.</p>
   </div>
-  <aside class="panel glass-panel">
+  <aside class="panel glass-panel" aria-labelledby="suggestions-heading">
     {{ section_header('Suggested prompts', 'Tap one to seed the chat') }}
-    <div class="chat-suggestions-panel" data-chat-suggestions>
-      <button type="button" class="chat-suggestion-btn">Where is the nearest gate?</button>
-      <button type="button" class="chat-suggestion-btn">Find food with the shortest queue.</button>
-      <button type="button" class="chat-suggestion-btn">Show me accessible routes.</button>
+    <div class="chat-suggestions-panel" data-chat-suggestions aria-label="Quick chat prompts" role="list">
+      <button type="button" class="chat-suggestion-btn" data-chat-preset role="listitem">Where is the nearest gate?</button>
+      <button type="button" class="chat-suggestion-btn" data-chat-preset role="listitem">Find food with the shortest queue.</button>
+      <button type="button" class="chat-suggestion-btn" data-chat-preset role="listitem">Show me accessible routes.</button>
+      <button type="button" class="chat-suggestion-btn" data-chat-preset role="listitem">What time does the next match start?</button>
     </div>
   </aside>
 </section>
 
-<section class="section mt-8">
+<section class="section mt-8" aria-label="Chat interface">
   <div class="panel glass-panel chat-window">
-    <div class="chat-log" data-chat-log aria-live="polite" aria-label="Chat conversation">
-      <article class="chat-entry ai">
-        <span class="entry-label">StadiumMind</span>
-        <div>Hi. Tell me where you want to go, and I’ll return the best route and crowd-aware advice.</div>
+    <div class="chat-log"
+         data-chat-log
+         aria-live="polite"
+         aria-relevant="additions"
+         aria-label="Chat conversation — new messages announced"
+         role="log">
+      <article class="chat-entry ai" aria-label="StadiumMind: Welcome message">
+        <span class="entry-label" aria-hidden="true">StadiumMind</span>
+        <div>Hi! Tell me where you want to go, and I'll return the best route with crowd-aware and accessibility advice.</div>
       </article>
     </div>
 
-    <form class="inline-form" data-fan-chat-form>
+    <form class="inline-form" data-fan-chat-form aria-label="Send a message to the chat assistant">
       <input type="hidden" name="venue_id" value="{{ venue_id }}">
       <div class="form-group flex-1">
         <label class="form-label" for="fan-message">Message</label>
-        <input class="form-input" id="fan-message" name="message" type="text" placeholder="How do I get to Gate A?" required aria-required="true" aria-label="Chat message">
+        <input class="form-input" id="fan-message" name="message" type="text"
+               placeholder="How do I get to Gate A?"
+               required aria-required="true"
+               aria-label="Type your question here"
+               autocomplete="off">
       </div>
-      <button type="submit" class="btn btn-primary">Send</button>
+      <button type="submit" class="btn btn-primary" aria-label="Send message to assistant">Send</button>
     </form>
   </div>
 </section>

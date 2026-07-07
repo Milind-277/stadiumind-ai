@@ -3,10 +3,6 @@
    Glassmorphism dashboards, landing page, accessibility controls.
    ============================================================ */
 
-:root {
-  --font-scale: 1;
-}
-
 html[data-motion="reduced"] *,
 html[data-motion="reduced"] *::before,
 html[data-motion="reduced"] *::after {
@@ -214,6 +210,8 @@ body.app-body {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+/* Role card layout and icon/name/desc — defined in layouts.css */
+/* These overrides apply frontend-specific sizing only */
 .role-card {
   min-height: 100%;
   text-align: left;
@@ -245,6 +243,72 @@ body.app-body {
 .role-card .role-desc {
   min-height: 4.5em;
 }
+
+/* ── Role Nav Bar ─────────────────────────────────────────────── */
+.role-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) 0 var(--space-6);
+  border-bottom: 1px solid var(--clr-border);
+  margin-bottom: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.role-nav__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--clr-text-muted);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+.role-nav__back:hover { color: var(--clr-text-secondary); background: var(--clr-bg-card); }
+
+.role-nav__divider {
+  color: var(--clr-text-muted);
+  font-size: var(--text-xs);
+  margin: 0 var(--space-1);
+}
+
+.role-nav__links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.role-nav__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--clr-text-secondary);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid transparent;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+.role-nav__link:hover {
+  background: var(--clr-bg-card);
+  color: var(--clr-text-primary);
+  border-color: var(--clr-border);
+}
+.role-nav__link.active {
+  background: var(--clr-blue-dim);
+  color: var(--clr-blue-light);
+  border-color: rgba(26,111,255,0.25);
+  font-weight: 600;
+}
+.role-nav__link--fan.active    { background: var(--clr-gold-dim);    color: var(--clr-gold);    border-color: rgba(255,183,0,0.25); }
+.role-nav__link--security.active { background: var(--clr-danger-dim); color: var(--clr-danger); border-color: rgba(255,69,58,0.25); }
+.role-nav__link--volunteer.active { background: var(--clr-teal-dim);  color: var(--clr-teal);   border-color: rgba(0,212,170,0.25); }
 
 .dashboard-grid {
   grid-template-columns: 1.1fr 0.9fr;
@@ -342,12 +406,33 @@ body.app-body {
 }
 
 .empty-state {
-  padding: var(--space-8);
+  padding: var(--space-10) var(--space-8);
   text-align: center;
   color: var(--clr-text-secondary);
   border: 1px dashed rgba(255, 255, 255, 0.14);
   border-radius: var(--radius-2xl);
   background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+.empty-state::before {
+  content: attr(data-icon);
+  font-size: 2.5rem;
+  line-height: 1;
+  opacity: 0.6;
+}
+.empty-state h3 {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--clr-text-primary);
+  margin: 0;
+}
+.empty-state p {
+  font-size: var(--text-sm);
+  margin: 0;
+  max-width: 40ch;
 }
 
 .notice {
@@ -461,9 +546,31 @@ body.app-body {
 .page-footer {
   width: min(var(--content-max-width), calc(100% - 2rem));
   margin: 0 auto var(--space-8);
-  padding: var(--space-4) 0;
+  padding: var(--space-5) 0;
   color: var(--clr-text-muted);
   font-size: var(--text-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  border-top: 1px solid var(--clr-border);
+}
+.page-footer a {
+  color: var(--clr-text-muted);
+  text-decoration: none;
+  transition: color var(--duration-fast);
+}
+.page-footer a:hover { color: var(--clr-gold); }
+.page-footer__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.page-footer__links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
 }
 
 .high-contrast-hint {

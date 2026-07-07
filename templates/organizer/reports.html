@@ -1,73 +1,133 @@
 {% extends "base.html" %}
-{% from "components.html" import badge, section_header, ai_recommendation_panel, weather_widget, sustainability_widget, status_widget %}
+{% from "components.html" import badge, section_header, ai_recommendation_panel, weather_widget, sustainability_widget, status_widget, role_nav %}
 
-{% block title %}Organizer Reports | StadiumMind AI{% endblock %}
+{% block title %}Reports & Alerts | StadiumMind AI{% endblock %}
 {% block body_class %}organizer-reports{% endblock %}
 
 {% block content %}
-<section class="hero">
-  <div class="hero-panel glass-panel">
+{{ role_nav('organizer', 'reports') }}
+
+<section class="hero" aria-labelledby="reports-hero-heading">
+  <div class="hero-panel glass-panel animate-fade-in-up">
     <div class="hero-kicker">Reports and alerts</div>
-    <h1 class="hero-title">Generate operational briefing and broadcast alerts.</h1>
-    <p class="hero-copy">Use the built-in APIs to generate briefings or issue venue alerts without leaving the dashboard.</p>
+    <h1 class="hero-title" id="reports-hero-heading">Generate operational briefings and broadcast alerts.</h1>
+    <p class="hero-copy">Use the built-in APIs to generate briefings or issue venue-wide alerts without leaving the dashboard.</p>
   </div>
-  <aside class="panel glass-panel">
+  <aside class="panel glass-panel animate-scale-in delay-100" aria-label="Report and broadcast tool summary">
     {{ section_header('Response tools', 'Briefings and broadcast controls') }}
-    <div class="chips">
-      {{ badge('Briefing', 'info') }}
-      {{ badge('Broadcast', 'danger') }}
-      {{ badge('Operations', 'gold') }}
+    <div class="detail-list">
+      <div class="detail-row">
+        <span class="detail-label">Briefing</span>
+        <span class="detail-value">{{ badge('AI-generated', 'info') }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Broadcast</span>
+        <span class="detail-value">{{ badge('Venue-wide', 'danger') }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Priority levels</span>
+        <span class="detail-value">Low · Medium · High · Critical</span>
+      </div>
+    </div>
+    <div class="notice mt-4" role="note" aria-label="Broadcast warning">
+      <span aria-hidden="true">⚠️</span>
+      <div>
+        <strong>Alert broadcasts</strong>
+        <span>Critical alerts are immediately visible to all dashboard operators for this venue.</span>
+      </div>
     </div>
   </aside>
 </section>
 
-<section class="section mt-8 dashboard-grid">
+<section class="section mt-8 dashboard-grid" aria-label="Report generation and alert broadcast">
   <div class="dashboard-column">
     <div class="panel glass-panel">
-      {{ section_header('Generate report', 'Creates an operational briefing from venue data') }}
-      <form class="inline-form" data-report-form>
+      {{ section_header('Generate report', 'Creates an AI operational briefing from live venue data') }}
+      <form class="inline-form" data-report-form aria-label="Report generation form">
         <div class="form-group">
           <label class="form-label" for="report-venue">Venue ID</label>
-          <input class="form-input" id="report-venue" name="venue_id" type="text" value="v001" aria-label="Venue identifier">
+          <input class="form-input" id="report-venue" name="venue_id" type="text"
+                 value="v001"
+                 aria-label="Venue identifier for this report"
+                 autocomplete="off">
         </div>
-        <button type="submit" class="btn btn-primary">Generate</button>
+        <button type="submit" class="btn btn-primary" aria-label="Generate operational briefing for this venue">
+          Generate
+        </button>
       </form>
-      <div class="result-panel mt-4" data-report-output></div>
+      <div class="result-panel mt-4"
+           id="report-output"
+           data-report-output
+           aria-live="polite"
+           aria-label="Generated report output">
+        <div class="empty-state" data-icon="📋">
+          <h3>No report generated yet</h3>
+          <p>Click Generate to create an AI-powered operational briefing for this venue.</p>
+        </div>
+      </div>
     </div>
-  </div>
-  <div class="dashboard-column">
-    {{ status_widget('Broadcast priority', 'Warning', 'warning', [{'label': 'Briefings', 'value': 'Live'}, {'label': 'Crowd risk', 'value': 'Medium'}, {'label': 'Incident severity', 'value': 'Warning'}]) }}
-    {{ ai_recommendation_panel('Why this recommendation?', 'Report logic', 'The generated briefing and alerts are built from live crowd, incident, and volunteer data.') }}
-    {{ weather_widget('rain', '18°C', 'Weather increases the need for concise exit messaging', '🌧️') }}
-    {{ sustainability_widget('Water refill station available', 'Encourage staff to walk short distances', 'Use the nearest waste sorting point', '15 kg CO2e saved (mock)') }}
+
     <div class="panel glass-panel mt-4">
-      {{ section_header('Broadcast alert', 'Use for urgent venue-wide communication') }}
-      <form class="list-stack" data-alert-form>
+      {{ section_header('Broadcast alert', 'Issue an urgent venue-wide communication') }}
+      <form class="list-stack" data-alert-form aria-label="Broadcast alert form">
         <div class="form-group">
-          <label class="form-label" for="alert-title">Title</label>
-          <input class="form-input" id="alert-title" name="title" type="text" placeholder="Crowd warning" required aria-required="true">
+          <label class="form-label" for="alert-title">Alert title</label>
+          <input class="form-input" id="alert-title" name="title" type="text"
+                 placeholder="Crowd warning — Gate C congested"
+                 required aria-required="true"
+                 aria-describedby="alert-title-hint">
+          <span class="form-label text-muted" id="alert-title-hint" style="font-weight:400;font-size:var(--text-xs)">
+            Use a clear, action-oriented title.
+          </span>
         </div>
         <div class="form-group">
           <label class="form-label" for="alert-message">Message</label>
-          <textarea class="form-textarea" id="alert-message" name="message" placeholder="Use the south exit and follow staff directions." required aria-required="true"></textarea>
+          <textarea class="form-textarea" id="alert-message" name="message"
+                    placeholder="Use the south exit and follow staff directions."
+                    required aria-required="true"
+                    rows="3"></textarea>
         </div>
         <div class="form-group">
-          <label class="form-label" for="alert-priority">Priority</label>
-          <select class="form-select" id="alert-priority" name="priority">
-            <option value="low">Low</option>
-            <option value="medium" selected>Medium</option>
-            <option value="high">High</option>
-            <option value="critical">Critical</option>
+          <label class="form-label" for="alert-priority">Priority level</label>
+          <select class="form-select" id="alert-priority" name="priority" aria-label="Alert priority level">
+            <option value="low">Low — informational</option>
+            <option value="medium" selected>Medium — advisory</option>
+            <option value="high">High — action required</option>
+            <option value="critical">Critical — immediate response</option>
           </select>
         </div>
         <div class="form-group">
           <label class="form-label" for="alert-venue">Venue ID</label>
-          <input class="form-input" id="alert-venue" name="venue_id" type="text" value="v001" aria-label="Venue identifier">
+          <input class="form-input" id="alert-venue" name="venue_id" type="text"
+                 value="v001"
+                 aria-label="Venue identifier for this broadcast"
+                 autocomplete="off">
         </div>
-        <button type="submit" class="btn btn-danger">Broadcast alert</button>
+        <div class="page-actions">
+          <button type="submit" class="btn btn-danger" aria-label="Broadcast this alert to all operators for this venue">
+            <span aria-hidden="true">📢</span> Broadcast alert
+          </button>
+        </div>
       </form>
-      <div class="result-panel mt-4" data-alert-output></div>
+      <div class="result-panel mt-4"
+           id="alert-output"
+           data-alert-output
+           aria-live="assertive"
+           aria-label="Broadcast alert result">
+      </div>
     </div>
+  </div>
+
+  <div class="dashboard-column">
+    {{ status_widget('Broadcast priority', 'Warning', 'warning', [
+      {'label': 'Last report', 'value': 'Not yet generated'},
+      {'label': 'Crowd risk', 'value': 'Medium'},
+      {'label': 'Incident severity', 'value': 'Warning'}
+    ]) }}
+    {{ ai_recommendation_panel('Why this recommendation?', 'Report logic',
+       'The generated briefing and alerts are built from live crowd, incident, and volunteer data. Critical crowd levels or open incidents trigger immediate escalation in the AI output.') }}
+    {{ weather_widget('rain', '18°C', 'Weather increases the need for concise exit messaging', '🌧️') }}
+    {{ sustainability_widget('Water refill station available', 'Encourage staff to walk short distances', 'Use the nearest waste sorting point', '15 kg CO₂e saved (mock)') }}
   </div>
 </section>
 {% endblock %}

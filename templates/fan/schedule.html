@@ -1,28 +1,51 @@
 {% extends "base.html" %}
-{% from "components.html" import badge, match_card, section_header, empty_state %}
+{% from "components.html" import badge, match_card, section_header, empty_state, role_nav %}
 
 {% block title %}Fan Schedule | StadiumMind AI{% endblock %}
 {% block body_class %}fan-schedule{% endblock %}
 
 {% block content %}
-<section class="hero">
-  <div class="hero-panel glass-panel">
+{{ role_nav('fan', 'schedule') }}
+
+<section class="hero" aria-labelledby="schedule-hero-heading">
+  <div class="hero-panel glass-panel animate-fade-in-up">
     <div class="hero-kicker">Fan schedule</div>
-    <h1 class="hero-title">Plan your match day.</h1>
+    <h1 class="hero-title" id="schedule-hero-heading">Plan your match day.</h1>
     <p class="hero-copy">Review every available fixture in one place and jump back to the dashboard when you are ready.</p>
   </div>
-  <aside class="panel glass-panel">
+  <aside class="panel glass-panel animate-scale-in delay-100" aria-label="Schedule summary">
     {{ section_header('Schedule snapshot', 'All fixtures listed below') }}
-    {{ badge(matches|length ~ ' matches', 'info') }}
+    <div class="detail-list">
+      <div class="detail-row">
+        <span class="detail-label">Total fixtures</span>
+        <span class="detail-value">{{ badge(matches|length ~ ' matches', 'info') }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Live now</span>
+        <span class="detail-value">
+          {% set live_count = matches|selectattr('is_live')|list|length %}
+          {% if live_count %}
+            {{ badge(live_count ~ ' live', 'live') }}
+          {% else %}
+            {{ badge('None', 'ghost') }}
+          {% endif %}
+        </span>
+      </div>
+    </div>
+    <div class="panel-actions">
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('fan.index') }}" aria-label="Return to fan dashboard">← Dashboard</a>
+      <a class="btn btn-primary btn-sm" href="{{ url_for('fan.wayfinding') }}" aria-label="Go to wayfinding">🗺️ Navigate</a>
+    </div>
   </aside>
 </section>
 
-<section class="section mt-8">
-  <div class="list-stack">
+<section class="section mt-8" aria-labelledby="fixtures-heading">
+  {{ section_header('All fixtures', 'Complete match schedule for this event') }}
+  <div class="list-stack" role="list" aria-labelledby="fixtures-heading">
     {% for match in matches %}
-      {{ match_card(match, match.is_live) }}
+      <div role="listitem">{{ match_card(match, match.is_live) }}</div>
     {% else %}
-      {{ empty_state('No matches available', 'The schedule will appear when match data is loaded.') }}
+      {{ empty_state('No matches available', 'The schedule will appear when match data is loaded from the backend.', '📅') }}
     {% endfor %}
   </div>
 </section>

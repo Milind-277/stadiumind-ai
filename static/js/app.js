@@ -357,7 +357,12 @@
     const confidence = Math.max(68, Math.min(99, options.confidence || 86));
     const crowdBadge = statusBadge(options.crowdLabel || "Low", options.crowdLevel || "low");
     const incidentBadge = statusBadge(options.incidentLabel || "Info", options.incidentLevel || "info");
-    container.innerHTML = `
+
+    // ── FIX: Append panel below existing content, never replace it ────────────
+    const panel = document.createElement("div");
+    panel.className = "intelligence-panel";
+    panel.setAttribute("aria-label", "AI intelligence panel");
+    panel.innerHTML = `
       <div class="recommendation-card">
         ${confidenceMeter(confidence)}
         <div class="chips">
@@ -371,11 +376,12 @@
           ${sustainabilityPanel()}
           ${weatherPanel()}
         </div>
-        <div class="recommendation-list">
+        ${itemCount > 0 ? `<div class="recommendation-list">
           ${options.items.map((item, index) => `<div class="list-item recommendation-list__item"><span>${item}</span><span class="status-badge status-info recommendation-list__confidence">${Math.max(68, confidence - index * 3)}%</span></div>`).join("")}
-        </div>
+        </div>` : ""}
       </div>
     `;
+    container.appendChild(panel);
     updateWeatherWidgets();
     applyTranslations();
   }
@@ -384,8 +390,9 @@
     const entry = document.createElement("article");
     entry.className = `chat-entry ${variant}`;
     entry.setAttribute("role", "article");
+    entry.setAttribute("aria-label", `${label}: ${content.replace(/<[^>]+>/g, "").substring(0, 80)}`);
     entry.innerHTML = `
-      <span class="entry-label">${label}</span>
+      <span class="entry-label" aria-hidden="true">${label}</span>
       <div>${content}</div>
     `;
     log.appendChild(entry);
@@ -400,6 +407,9 @@
       return;
     }
 
+    // ── FIX: Bind initial preset buttons immediately on page load ─────────────
+    bindChatSuggestionButtons(form, suggestions);
+
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       const messageInput = form.querySelector("[name='message']");
@@ -412,6 +422,16 @@
 
       appendChatEntry(log, "user", "You", message);
       if (submitButton) submitButton.disabled = true;
+      if (messageInput) messageInput.value = "";
+
+      // Show typing indicator
+      const typingEl = document.createElement("div");
+      typingEl.className = "chat-entry ai";
+      typingEl.setAttribute("aria-label", "StadiumMind is typing");
+      typingEl.setAttribute("aria-live", "polite");
+      typingEl.innerHTML = `<span class="entry-label" aria-hidden="true">StadiumMind</span><div class="chat-typing"><span></span><span></span><span></span></div>`;
+      log.appendChild(typingEl);
+      log.scrollTop = log.scrollHeight;
 
       try {
         const data = await requestJson("/fan/api/fan/chat", {
@@ -421,6 +441,7 @@
             venue_id: venueIdInput?.value || "v001",
           }),
         });
+        log.removeChild(typingEl);
         appendChatEntry(log, "ai", "StadiumMind", data.reply || "No response available.");
         if (suggestions && Array.isArray(data.suggestions)) {
           suggestions.innerHTML = data.suggestions
@@ -442,14 +463,12 @@
           incidentLevel: data.urgent ? "warning" : "info",
         });
       } catch (error) {
-        appendChatEntry(log, "ai", "StadiumMind", error.message);
+        if (document.contains(typingEl)) log.removeChild(typingEl);
+        appendChatEntry(log, "ai", "StadiumMind", `<span class="text-danger">${error.message}</span>`);
       } finally {
         if (submitButton) submitButton.disabled = false;
-        if (messageInput) messageInput.value = "";
       }
     });
-
-    bindChatSuggestionButtons(form, suggestions);
   }
 
   function bindChatSuggestionButtons(form, container) {
@@ -531,7 +550,7 @@
           return;
         }
 
-        output.innerHTML = `<div class="spinner spinner-sm" aria-hidden="true"></div>`;
+        output.innerHTML = `<div class="spinner spinner-sm" role="status" aria-label="Loading..."><span class="sr-only">Loading...</span></div>`;
         try {
           const data = await requestJson("/volunteer/api/volunteer/ai-guidance", {
             method: "POST",
@@ -571,7 +590,7 @@
           return;
         }
 
-        output.innerHTML = `<div class="spinner spinner-sm" aria-hidden="true"></div>`;
+        output.innerHTML = `<div class="spinner spinner-sm" role="status" aria-label="Loading..."><span class="sr-only">Loading...</span></div>`;
         try {
           const data = await requestJson(`/security/api/security/incidents/${encodeURIComponent(incidentId)}/classify`, {
             method: "POST",
@@ -613,7 +632,7 @@
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       const venueId = form.querySelector("[name='venue_id']")?.value || "v001";
-      output.innerHTML = `<div class="spinner spinner-sm" aria-hidden="true"></div>`;
+      output.innerHTML = `<div class="spinner spinner-sm" role="status" aria-label="Loading..."><span class="sr-only">Loading...</span></div>`;
 
       try {
         const data = await requestJson(`/organizer/api/organizer/crowd/live?venue_id=${encodeURIComponent(venueId)}`);
@@ -660,7 +679,7 @@
     reportForm?.addEventListener("submit", async (event) => {
       event.preventDefault();
       const venueId = reportForm.querySelector("[name='venue_id']")?.value || "v001";
-      reportOutput.innerHTML = `<div class="spinner spinner-sm" aria-hidden="true"></div>`;
+      reportOutput.innerHTML = `<div class="spinner spinner-sm" role="status" aria-label="Loading..."><span class="sr-only">Loading...</span></div>`;
 
       try {
         const data = await requestJson("/organizer/api/organizer/reports/generate", {
@@ -699,7 +718,7 @@
         return;
       }
 
-      alertOutput.innerHTML = `<div class="spinner spinner-sm" aria-hidden="true"></div>`;
+      alertOutput.innerHTML = `<div class="spinner spinner-sm" role="status" aria-label="Loading..."><span class="sr-only">Loading...</span></div>`;
       try {
         const data = await requestJson("/organizer/api/organizer/alerts/broadcast", {
           method: "POST",

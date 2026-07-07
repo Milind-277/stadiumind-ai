@@ -1,48 +1,103 @@
 {% extends "base.html" %}
-{% from "components.html" import badge, section_header, stat_card %}
+{% from "components.html" import badge, section_header, stat_card, role_nav %}
 
 {% block title %}Fan Wayfinding | StadiumMind AI{% endblock %}
 {% block body_class %}fan-wayfinding{% endblock %}
 
 {% block content %}
-<section class="hero">
-  <div class="hero-panel glass-panel">
+{{ role_nav('fan', 'wayfinding') }}
+
+<section class="hero" aria-labelledby="wayfinding-hero-heading">
+  <div class="hero-panel glass-panel animate-fade-in-up">
     <div class="hero-kicker">Wayfinding</div>
-    <h1 class="hero-title">Get to your destination without friction.</h1>
+    <h1 class="hero-title" id="wayfinding-hero-heading">Get to your destination without friction.</h1>
     <p class="hero-copy">Submit your destination and receive live route guidance that respects crowd flow and accessibility needs.</p>
   </div>
-  <aside class="panel glass-panel">
+  <aside class="panel glass-panel animate-scale-in delay-100" aria-label="Route tool capabilities">
     {{ section_header('Route tools', 'Built for quick navigation') }}
     <div class="detail-list">
       {{ stat_card('Best gate', 'Calculated live', 'Decision support from the backend', 'blue', '🚪') }}
-      {{ stat_card('Crowd avoidance', 'Included', 'Safer alternative routes', 'danger', '↔️') }}
+      {{ stat_card('Crowd avoidance', 'Included', 'Safer alternative routes when busy', 'danger', '↔️') }}
+      {{ stat_card('Accessibility', 'Enabled', 'Ramp and elevator routes prioritised', 'success', '♿') }}
     </div>
   </aside>
 </section>
 
-<section class="section mt-8 dashboard-grid">
+<section class="section mt-8 dashboard-grid" aria-label="Wayfinding form and notes">
   <div class="dashboard-column">
     <div class="panel glass-panel">
-      {{ section_header('Find your route', 'Use the existing API-backed guidance engine') }}
-      <form class="inline-form" data-wayfinding-form>
+      {{ section_header('Find your route', 'AI-powered guidance for any venue destination') }}
+      <form class="inline-form" data-wayfinding-form aria-label="Route request form">
         <input type="hidden" name="venue_id" value="{{ venue_id }}">
         <div class="form-group">
           <label class="form-label" for="destination">Destination</label>
-          <input class="form-input" id="destination" name="destination" type="text" placeholder="Food Court East, Gate A, Medical Bay A" required aria-required="true">
+          <input class="form-input" id="destination" name="destination" type="text"
+                 placeholder="Food Court East, Gate A, Medical Bay A"
+                 required aria-required="true"
+                 aria-describedby="destination-hint"
+                 autocomplete="off">
+          <span class="form-label text-muted" id="destination-hint" style="font-weight:400;font-size:var(--text-xs)">
+            Try: "Gate B", "First Aid", "Section 214", "Concourse West"
+          </span>
         </div>
-        <button type="submit" class="btn btn-primary">Get guidance</button>
+        <button type="submit" class="btn btn-primary" aria-label="Get route guidance for entered destination">
+          Get guidance
+        </button>
       </form>
-      <div class="result-panel" data-wayfinding-result data-empty="true" data-placeholder="Your route guidance will appear here."></div>
+
+      <div class="result-panel mt-4"
+           id="wayfinding-result"
+           data-wayfinding-result
+           data-empty="true"
+           data-placeholder="Your route guidance will appear here after submitting."
+           aria-live="polite"
+           aria-label="Route guidance result">
+        <div class="empty-state" data-icon="🗺️">
+          <h3>Enter a destination above</h3>
+          <p>The guidance will appear here, including the best gate, transport suggestion, and AI-generated route advice.</p>
+        </div>
+      </div>
     </div>
   </div>
+
   <div class="dashboard-column">
     <div class="panel glass-panel">
-      {{ section_header('Accessibility note', 'Front-end only, keyboard friendly') }}
-      <p>The guidance uses the same JSON-backed venue data as the rest of the application and includes accessibility-aware recommendations.</p>
-      <div class="chips">
+      {{ section_header('Accessibility & features', 'How this tool works') }}
+      <div class="detail-list">
+        <div class="detail-row">
+          <span class="detail-label">Input method</span>
+          <span class="detail-value">Keyboard and touch friendly</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Route source</span>
+          <span class="detail-value">Live JSON-backed venue data</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Accessibility</span>
+          <span class="detail-value">Ramp and elevator routes included</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Language</span>
+          <span class="detail-value">Follows your toolbar selection</span>
+        </div>
+      </div>
+      <div class="chips mt-4" aria-label="Feature badges">
         {{ badge('Keyboard friendly', 'success') }}
         {{ badge('High contrast', 'info') }}
         {{ badge('Reduced motion', 'ghost') }}
+        {{ badge('AI-powered', 'gold') }}
+      </div>
+    </div>
+
+    <div class="panel glass-panel mt-4">
+      {{ section_header('Common destinations', 'Quick reference for this venue') }}
+      <div class="chips" aria-label="Common destination examples">
+        <span class="badge badge-ghost">Gate A / B / C</span>
+        <span class="badge badge-ghost">Food Court East / West</span>
+        <span class="badge badge-ghost">Medical Bay A / B</span>
+        <span class="badge badge-ghost">Fan Zone</span>
+        <span class="badge badge-ghost">Accessible Entrance</span>
+        <span class="badge badge-ghost">VIP Lounge</span>
       </div>
     </div>
   </div>

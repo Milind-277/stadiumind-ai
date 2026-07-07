@@ -1,41 +1,77 @@
 {% extends "base.html" %}
-{% from "components.html" import badge, section_header, stat_card, list_item, ai_recommendation_panel, weather_widget, sustainability_widget, status_widget %}
+{% from "components.html" import badge, section_header, stat_card, list_item, ai_recommendation_panel, weather_widget, sustainability_widget, status_widget, empty_state, role_nav %}
 
 {% block title %}Volunteer Console | StadiumMind AI{% endblock %}
 {% block body_class %}volunteer-console{% endblock %}
 
 {% block content %}
-<section class="hero">
-  <div class="hero-panel glass-panel">
+{{ role_nav('volunteer', 'console') }}
+
+<section class="hero" aria-labelledby="volunteer-hero-heading">
+  <div class="hero-panel glass-panel animate-fade-in-up">
     <div class="hero-kicker">Volunteer console</div>
-    <h1 class="hero-title">Stay aligned with your zone and tasks.</h1>
+    <h1 class="hero-title" id="volunteer-hero-heading">Stay aligned with your zone and tasks.</h1>
     <p class="hero-copy">Review your profile, active tasks, and the latest guidance from the volunteer service.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="{{ url_for('volunteer.tasks') }}" aria-label="Open AI-guided task list">✅ My tasks</a>
+    </div>
   </div>
-  <aside class="panel glass-panel">
+  <aside class="panel glass-panel animate-scale-in delay-100" aria-labelledby="volunteer-profile-heading">
     {{ section_header('Volunteer profile', 'Current assignment') }}
     {% if volunteer %}
       {{ stat_card(volunteer.name, volunteer.zone_name, volunteer.status|title, 'success', '🧑‍🚀') }}
-      <div class="detail-list mt-4">
-        <div class="detail-row"><span class="detail-label">Skills</span><span class="detail-value">{{ volunteer.skills|join(', ') }}</span></div>
-        <div class="detail-row"><span class="detail-label">Languages</span><span class="detail-value">{{ volunteer.languages|join(', ') }}</span></div>
+      <div class="detail-list mt-4" aria-label="Volunteer details">
+        <div class="detail-row">
+          <span class="detail-label">Skills</span>
+          <span class="detail-value">{{ volunteer.skills|join(', ') }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Languages</span>
+          <span class="detail-value">{{ volunteer.languages|join(', ') }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Open tasks</span>
+          <span class="detail-value">{{ badge(tasks|length ~ ' task' ~ ('s' if tasks|length != 1 else ''), 'info') }}</span>
+        </div>
       </div>
+    {% else %}
+      {{ empty_state('No volunteer profile', 'Volunteer data could not be loaded. Please check the data source.', '🧑‍🚀') }}
     {% endif %}
   </aside>
 </section>
 
-<section class="section mt-8">
+<section class="section mt-8" aria-labelledby="tasks-preview-heading">
   {{ section_header('Current tasks', 'Review the tasks assigned to you') }}
-  <div class="list-stack">
+  <div class="list-stack" role="list" aria-labelledby="tasks-preview-heading">
     {% for task in tasks %}
-      {{ list_item(task.title, task.description, task.priority|title, 'warning' if task.priority == 'high' else 'info') }}
+      <div role="listitem">
+        {{ list_item(
+          task.title,
+          task.description,
+          task.priority|title,
+          'warning' if task.priority == 'high' else ('danger' if task.priority == 'critical' else 'info')
+        ) }}
+      </div>
+    {% else %}
+      {{ empty_state('No tasks assigned', 'Tasks will appear here once they are allocated to you. Check back after your zone briefing.', '✅') }}
     {% endfor %}
   </div>
+  {% if tasks|length > 0 %}
+    <div class="page-actions mt-4">
+      <a class="btn btn-primary" href="{{ url_for('volunteer.tasks') }}" aria-label="Open full task list with AI guidance">View all tasks with AI guidance →</a>
+    </div>
+  {% endif %}
 </section>
 
-<section class="section mt-8 dashboard-grid">
+<section class="section mt-8 dashboard-grid" aria-label="Status and environmental context">
   <div class="dashboard-column">
-    {{ status_widget('Live crowd status', 'Medium', 'medium', [{'label': 'Zone', 'value': volunteer.zone_name if volunteer else 'Assigned zone'}, {'label': 'Open tasks', 'value': tasks|length}, {'label': 'Support level', 'value': 'Guided'}]) }}
-    {{ ai_recommendation_panel('Why this recommendation?', 'Volunteer guidance', 'The guidance reflects the task location, priority, and support routes available to the volunteer.') }}
+    {{ status_widget('Live crowd status', 'Medium', 'medium', [
+      {'label': 'Assigned zone', 'value': volunteer.zone_name if volunteer else 'Not assigned'},
+      {'label': 'Open tasks', 'value': tasks|length},
+      {'label': 'Support level', 'value': 'Guided'}
+    ]) }}
+    {{ ai_recommendation_panel('Why this recommendation?', 'Volunteer guidance',
+       'The guidance reflects the task location, priority, and support routes available to the volunteer. Emergency escalation thresholds are always preserved.') }}
   </div>
   <div class="dashboard-column">
     {{ weather_widget('cloudy', '21°C', 'Weather may make outdoor handoffs slower', '☁️') }}

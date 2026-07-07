@@ -1,45 +1,89 @@
 {% extends "base.html" %}
-{% from "components.html" import badge, section_header, empty_state %}
+{% from "components.html" import badge, section_header, empty_state, role_nav %}
 
 {% block title %}Volunteer Tasks | StadiumMind AI{% endblock %}
 {% block body_class %}volunteer-tasks{% endblock %}
 
 {% block content %}
-<section class="hero">
-  <div class="hero-panel glass-panel">
+{{ role_nav('volunteer', 'tasks') }}
+
+<section class="hero" aria-labelledby="tasks-hero-heading">
+  <div class="hero-panel glass-panel animate-fade-in-up">
     <div class="hero-kicker">Volunteer tasks</div>
-    <h1 class="hero-title">Get guidance for every assignment.</h1>
-    <p class="hero-copy">Each task card can request live guidance through the existing API and render the response inline.</p>
+    <h1 class="hero-title" id="tasks-hero-heading">Get AI guidance for every assignment.</h1>
+    <p class="hero-copy">Each task card can request live AI guidance through the volunteer API and renders the response inline alongside the task details.</p>
   </div>
-  <aside class="panel glass-panel">
+  <aside class="panel glass-panel animate-scale-in delay-100" aria-label="Task categories summary">
     {{ section_header('Task view', 'Accessible and mobile friendly') }}
-    <div class="chips">
-      {{ badge('Guidance', 'info') }}
+    <div class="detail-list" aria-label="Task count details">
+      <div class="detail-row">
+        <span class="detail-label">Total tasks</span>
+        <span class="detail-value">{{ badge(tasks|length ~ ' task' ~ ('s' if tasks|length != 1 else ''), 'info') }}</span>
+      </div>
+      {% set high_count = tasks|selectattr('priority', 'eq', 'high')|list|length %}
+      {% if high_count %}
+      <div class="detail-row">
+        <span class="detail-label">High priority</span>
+        <span class="detail-value">{{ badge(high_count ~ ' urgent', 'warning') }}</span>
+      </div>
+      {% endif %}
+    </div>
+    <div class="chips mt-4" aria-label="Available guidance features">
+      {{ badge('AI Guidance', 'info') }}
       {{ badge('Escalation', 'danger') }}
       {{ badge('Support', 'success') }}
     </div>
   </aside>
 </section>
 
-<section class="section mt-8">
-  <div class="list-stack">
+<section class="section mt-8" aria-labelledby="task-list-heading">
+  {{ section_header('All assigned tasks', 'Click "Get guidance" on any card to load AI-generated instructions') }}
+  <div class="list-stack" role="list" aria-labelledby="task-list-heading">
     {% for task in tasks %}
-      <article class="panel glass-panel">
+      <article class="panel glass-panel" role="listitem" aria-labelledby="task-title-{{ task.id }}">
         <div class="section-heading">
           <div>
-            <h2 class="section-title">{{ task.title }}</h2>
-            <p class="page-subtitle">{{ task.zone_name }} · {{ task.priority|title }} priority</p>
+            <h2 class="section-title" id="task-title-{{ task.id }}">{{ task.title }}</h2>
+            <p class="page-subtitle">
+              <span aria-label="Zone">{{ task.zone_name }}</span>
+              ·
+              <span aria-label="Priority">{{ task.priority|title }} priority</span>
+            </p>
           </div>
-          <button type="button" class="btn btn-primary btn-sm" data-task-guidance="{{ task.id }}">Get guidance</button>
+          <div class="chips">
+            {{ badge(task.priority|title, 'danger' if task.priority == 'critical' else ('warning' if task.priority == 'high' else 'info')) }}
+            <button type="button"
+                    class="btn btn-primary btn-sm"
+                    data-task-guidance="{{ task.id }}"
+                    aria-label="Get AI guidance for task: {{ task.title }}"
+                    aria-controls="task-output-{{ task.id }}"
+                    aria-expanded="false">
+              ✨ Get guidance
+            </button>
+          </div>
         </div>
+
         <p>{{ task.description }}</p>
+
         {% if task.ai_guidance %}
-          <div class="notice mt-4"><strong>Saved guidance</strong><span>{{ task.ai_guidance }}</span></div>
+          <div class="notice mt-3" role="note" aria-label="Previously saved guidance for this task">
+            <span aria-hidden="true">💡</span>
+            <div>
+              <strong>Saved guidance</strong>
+              <span>{{ task.ai_guidance }}</span>
+            </div>
+          </div>
         {% endif %}
-        <div class="result-panel mt-4" data-task-output="{{ task.id }}"></div>
+
+        <div class="result-panel mt-3"
+             id="task-output-{{ task.id }}"
+             data-task-output="{{ task.id }}"
+             aria-live="polite"
+             aria-label="AI guidance result for {{ task.title }}">
+        </div>
       </article>
     {% else %}
-      {{ empty_state('No tasks assigned', 'Tasks will appear here once they are allocated to the volunteer.') }}
+      {{ empty_state('No tasks assigned', 'Tasks will appear here once they are allocated to you by your zone coordinator.', '✅') }}
     {% endfor %}
   </div>
 </section>
