@@ -324,37 +324,37 @@ StadiumMind AI is built with WCAG 2.1 AA compliance as a target:
 ### Landing Page
 Role selector with glassmorphism cards.
 
-![Landing Page](screenshots/landing.png)
+![Landing Page](screenshots/landing.jpeg)
 
 
 ### Fan Dashboard
 Live match information with wayfinding quick actions.
 
-![Fan Dashboard](screenshots/fan-dashboard.png)
+![Fan Dashboard](screenshots/fan-dashboard.jpeg)
 
 
 ### Fan Chat
 AI-powered conversation with suggestion chips.
 
-![Fan Chat](screenshots/fan-chat.png)
+![Fan Chat](screenshots/fan-chat.jpeg)
 
 
 ### Organizer Dashboard
 KPI cards and venue occupancy overview.
 
-![Organizer Dashboard](screenshots/organizer-dashboard.png)
+![Organizer Dashboard](screenshots/organizer-dashboard.jpeg)
 
 
 ### Security Command Center
 Active incident triage view.
 
-![Security Command](screenshots/security-command.png)
+![Security Command](screenshots/security-command.jpeg)
 
 
 ### Volunteer Tasks
 AI-guided task management panel.
 
-![Volunteer Tasks](screenshots/volunteer-tasks.png)
+![Volunteer Tasks](screenshots/volunteer-tasks.jpeg)
 
 ---
 
