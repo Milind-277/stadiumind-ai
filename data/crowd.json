@@ -1,0 +1,56 @@
+[
+  {
+    "id": "cs001",
+    "venue_id": "v001",
+    "timestamp": "2026-06-17T20:15:00Z",
+    "total_attendance": 74250,
+    "venue_capacity": 82500,
+    "alert_active": true,
+    "bottleneck_zones": ["z09", "z06"],
+    "zones": [
+      {"zone_id": "z01", "zone_name": "North Concourse", "current_count": 6800, "capacity": 8000, "density_level": "high", "timestamp": "2026-06-17T20:15:00Z"},
+      {"zone_id": "z02", "zone_name": "South Concourse", "current_count": 5200, "capacity": 8000, "density_level": "moderate", "timestamp": "2026-06-17T20:15:00Z"},
+      {"zone_id": "z03", "zone_name": "Lower Bowl", "current_count": 38500, "capacity": 40000, "density_level": "high", "timestamp": "2026-06-17T20:15:00Z"},
+      {"zone_id": "z04", "zone_name": "Upper Deck", "current_count": 20000, "capacity": 30000, "density_level": "moderate", "timestamp": "2026-06-17T20:15:00Z"},
+      {"zone_id": "z05", "zone_name": "VIP Lounge", "current_count": 1800, "capacity": 2000, "density_level": "high", "timestamp": "2026-06-17T20:15:00Z"},
+      {"zone_id": "z06", "zone_name": "Food Court East", "current_count": 1450, "capacity": 1500, "density_level": "critical", "timestamp": "2026-06-17T20:15:00Z"},
+      {"zone_id": "z07", "zone_name": "Food Court West", "current_count": 900, "capacity": 1500, "density_level": "moderate", "timestamp": "2026-06-17T20:15:00Z"},
+      {"zone_id": "z09", "zone_name": "Exit Corridor North", "current_count": 4800, "capacity": 5000, "density_level": "critical", "timestamp": "2026-06-17T20:15:00Z"},
+      {"zone_id": "z10", "zone_name": "Exit Corridor South", "current_count": 2200, "capacity": 5000, "density_level": "low", "timestamp": "2026-06-17T20:15:00Z"}
+    ]
+  },
+  {
+    "id": "cs002",
+    "venue_id": "v002",
+    "timestamp": "2026-06-17T20:15:00Z",
+    "total_attendance": 52000,
+    "venue_capacity": 87523,
+    "alert_active": false,
+    "bottleneck_zones": [],
+    "zones": [
+      {"zone_id": "z21", "zone_name": "Tribuna Norte", "current_count": 15000, "capacity": 22000, "density_level": "moderate", "timestamp": "2026-06-17T20:15:00Z"},
+      {"zone_id": "z22", "zone_name": "Tribuna Sur", "current_count": 14000, "capacity": 22000, "density_level": "moderate", "timestamp": "2026-06-17T20:15:00Z"},
+      {"zone_id": "z23", "zone_name": "Tribuna Oriente", "current_count": 12000, "capacity": 20000, "density_level": "moderate", "timestamp": "2026-06-17T20:15:00Z"},
+      {"zone_id": "z24", "zone_name": "Palco VIP", "current_count": 2000, "capacity": 3000, "density_level": "moderate", "timestamp": "2026-06-17T20:15:00Z"},
+      {"zone_id": "z25", "zone_name": "Zona Comida Central", "current_count": 800, "capacity": 2000, "density_level": "low", "timestamp": "2026-06-17T20:15:00Z"},
+      {"zone_id": "z27", "zone_name": "Concourse Principal", "current_count": 5000, "capacity": 10000, "density_level": "low", "timestamp": "2026-06-17T20:15:00Z"}
+    ]
+  },
+  {
+    "id": "cs003",
+    "venue_id": "v003",
+    "timestamp": "2026-06-17T20:15:00Z",
+    "total_attendance": 41200,
+    "venue_capacity": 54500,
+    "alert_active": false,
+    "bottleneck_zones": ["z35"],
+    "zones": [
+      {"zone_id": "z31", "zone_name": "Lower Bowl North", "current_count": 16200, "capacity": 18000, "density_level": "high", "timestamp": "2026-06-17T20:15:00Z"},
+      {"zone_id": "z32", "zone_name": "Lower Bowl South", "current_count": 15500, "capacity": 18000, "density_level": "high", "timestamp": "2026-06-17T20:15:00Z"},
+      {"zone_id": "z33", "zone_name": "Upper Tier", "current_count": 7000, "capacity": 15000, "density_level": "low", "timestamp": "2026-06-17T20:15:00Z"},
+      {"zone_id": "z34", "zone_name": "Club Level", "current_count": 2000, "capacity": 2500, "density_level": "high", "timestamp": "2026-06-17T20:15:00Z"},
+      {"zone_id": "z35", "zone_name": "Concourse Ring", "current_count": 5700, "capacity": 6000, "density_level": "critical", "timestamp": "2026-06-17T20:15:00Z"},
+      {"zone_id": "z36", "zone_name": "Food Village", "current_count": 900, "capacity": 1800, "density_level": "moderate", "timestamp": "2026-06-17T20:15:00Z"}
+    ]
+  }
+]
