@@ -1,5 +1,5 @@
 """app/repositories/crowd_repo.py — JSON-backed CrowdSnapshot repository."""
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from app.models.crowd import CrowdSnapshot, ZoneDensity, DensityLevel
 from .json_base import JSONRepository

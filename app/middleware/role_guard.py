@@ -5,19 +5,10 @@ Uses Flask's signed session cookie (protected by SECRET_KEY).
 No JWT, no database — role is stored in session['role'] after selection.
 """
 import functools
-from typing import Tuple
 
 from flask import session, redirect, url_for, jsonify, request
 
 VALID_ROLES = {"fan", "organizer", "volunteer", "security"}
-
-
-class RoleNotSetError(Exception):
-    """Raised when no role is set in the session."""
-
-
-class InsufficientRoleError(Exception):
-    """Raised when the user's role doesn't match the required role."""
 
 
 def require_role(*roles: str):

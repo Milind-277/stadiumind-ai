@@ -1,7 +1,7 @@
 """app/models/alert.py — Alert and notification domain models."""
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Optional
+from typing import Optional
 
 
 class AlertPriority(str, Enum):

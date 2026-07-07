@@ -1,8 +1,7 @@
 """app/services/organizer_service.py — Business logic for the Organizer persona."""
-import json
 import logging
 import random
-from typing import Any, Dict, List
+from typing import Dict, List
 
 from app.repositories.crowd_repo import CrowdRepository
 from app.repositories.incident_repo import IncidentRepository

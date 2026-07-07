@@ -1,11 +1,10 @@
 """app/services/volunteer_service.py — Business logic for the Volunteer persona."""
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from app.repositories.volunteer_repo import VolunteerRepository, TaskRepository
 from app.repositories.incident_repo import IncidentRepository
 from app.models.volunteer import TaskStatus
-from app.models.incident import IncidentType, SeverityLevel, IncidentStatus
 from app.utils.datetime_utils import utcnow_iso
 from app.ai import ai_service
 

@@ -1,5 +1,5 @@
 """app/blueprints/volunteer.py — Volunteer console routes (pages + API)."""
-from flask import Blueprint, render_template, request, jsonify, session
+from flask import Blueprint, render_template, request, jsonify
 
 from app.middleware.role_guard import require_role
 from app.services.volunteer_service import VolunteerService

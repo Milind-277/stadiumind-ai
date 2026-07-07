@@ -1,6 +1,5 @@
 """app/middleware/error_handler.py — Global exception → JSON response mapping."""
 import logging
-import traceback
 import uuid
 from datetime import datetime, timezone
 

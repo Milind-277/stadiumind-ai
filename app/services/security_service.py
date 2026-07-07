@@ -1,11 +1,10 @@
 """app/services/security_service.py — Business logic for the Security persona."""
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from app.repositories.incident_repo import IncidentRepository
 from app.repositories.crowd_repo import CrowdRepository
 from app.repositories.venue_repo import VenueRepository
-from app.models.incident import IncidentType, SeverityLevel, IncidentStatus
 from app.utils.datetime_utils import utcnow_iso
 from app.ai import ai_service
 
@@ -130,7 +129,7 @@ class SecurityService:
             "reported_at": utcnow_iso(),
             "notes": [],
         }
-        saved = self.incidents.save(incident_data)
+        self.incidents.save(incident_data)
         logger.info("New incident logged: %s in %s", incident_data["id"], zone_name)
         return {
             "id": incident_data["id"],

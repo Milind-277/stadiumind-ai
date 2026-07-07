@@ -52,11 +52,6 @@ class Config:
                 "SECRET_KEY must be set to a strong random value in production."
             )
         if not cls.MOCK_AI and not cls.GEMINI_API_KEY:
-            import warnings
-            warnings.warn(
-                "GEMINI_API_KEY is not set. Falling back to MOCK_AI=true.",
-                stacklevel=2,
-            )
             cls.MOCK_AI = True
 
 

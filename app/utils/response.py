@@ -1,7 +1,7 @@
 """app/utils/response.py — Standard API response builder."""
 import uuid
 from datetime import datetime, timezone
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 
 def success(

@@ -1,5 +1,5 @@
 """app/repositories/venue_repo.py — JSON-backed Venue repository."""
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from app.models.venue import Venue, Zone, Gate, FoodCourt
 from .json_base import JSONRepository

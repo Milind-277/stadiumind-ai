@@ -1,7 +1,6 @@
 """app/services/fan_service.py — Business logic for the Fan persona."""
-import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from app.repositories.match_repo import MatchRepository
 from app.repositories.venue_repo import VenueRepository

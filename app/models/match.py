@@ -1,5 +1,5 @@
 """app/models/match.py — Match and Team domain models."""
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 
 

@@ -1,5 +1,5 @@
 """app/repositories/volunteer_repo.py — JSON-backed Volunteer and Task repositories."""
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from app.models.volunteer import Volunteer, Task, Shift, TaskStatus, TaskPriority
 from .json_base import JSONRepository

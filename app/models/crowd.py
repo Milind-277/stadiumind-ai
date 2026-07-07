@@ -1,7 +1,7 @@
 """app/models/crowd.py — Crowd density and analytics domain models."""
-from dataclasses import dataclass, field
-from typing import List, Optional
+from dataclasses import dataclass
 from enum import Enum
+from typing import List
 
 
 class DensityLevel(str, Enum):

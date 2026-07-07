@@ -24,8 +24,3 @@ def require_fields(data: dict, *fields: str) -> Optional[str]:
         if not data.get(field):
             return field
     return None
-
-
-def clamp(value: int, min_val: int, max_val: int) -> int:
-    """Clamp an integer within a range."""
-    return max(min_val, min(value, max_val))

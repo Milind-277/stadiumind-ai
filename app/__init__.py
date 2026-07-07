@@ -27,6 +27,7 @@ def create_app(config_class=Config) -> Flask:
     app.secret_key = config_class.SECRET_KEY
     app.config["DEBUG"] = config_class.DEBUG
     app.config["TESTING"] = config_class.TESTING
+    app.config["MOCK_AI"] = config_class.MOCK_AI
     app.config["SESSION_COOKIE_HTTPONLY"] = config_class.SESSION_COOKIE_HTTPONLY
     app.config["SESSION_COOKIE_SAMESITE"] = config_class.SESSION_COOKIE_SAMESITE
 
