@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "components.html" import badge, stat_card, section_header, empty_state, list_item %}
+{% from "components.html" import badge, stat_card, section_header, empty_state, list_item, ai_recommendation_panel, weather_widget, sustainability_widget, status_widget %}
 
 {% block title %}Organizer Dashboard | StadiumMind AI{% endblock %}
 {% block body_class %}organizer-dashboard{% endblock %}
@@ -35,16 +35,10 @@
     </div>
   </div>
   <div class="dashboard-column">
-    <div class="panel glass-panel">
-      {{ section_header('Command focus', 'What should be reviewed first') }}
-      <div class="chips">
-        {{ badge('Active incidents', 'danger') }}
-        {{ badge('Crowd alerts', 'warning') }}
-        {{ badge('Volunteer coverage', 'info') }}
-        {{ badge('Live matches', 'live') }}
-      </div>
-      <p class="mt-4">Use the crowd, reports, and alerts pages for targeted actions.</p>
-    </div>
+    {{ status_widget('Live crowd status', summary.alert_active and 'High' or 'Medium', summary.alert_active and 'high' or 'medium', [{'label': 'Active incidents', 'value': summary.total_active_incidents}, {'label': 'Live matches', 'value': summary.live_matches}, {'label': 'Available volunteers', 'value': summary.available_volunteers}]) }}
+    {{ ai_recommendation_panel('Why this recommendation?', 'Operational intelligence', 'The dashboard prioritises live crowd load, active incidents, and resource readiness.') }}
+    {{ weather_widget('rain', '18°C', 'Weather is affecting crowd movement and route preference', '🌧️') }}
+    {{ sustainability_widget('Water refill station near operations', 'Encourage staff to walk between nearby zones', 'Use sorted waste streams in command areas', '16 kg CO₂e saved (mock)') }}
   </div>
 </section>
 {% endblock %}

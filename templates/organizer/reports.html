@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "components.html" import badge, section_header %}
+{% from "components.html" import badge, section_header, ai_recommendation_panel, weather_widget, sustainability_widget, status_widget %}
 
 {% block title %}Organizer Reports | StadiumMind AI{% endblock %}
 {% block body_class %}organizer-reports{% endblock %}
@@ -36,7 +36,11 @@
     </div>
   </div>
   <div class="dashboard-column">
-    <div class="panel glass-panel">
+    {{ status_widget('Broadcast priority', 'Warning', 'warning', [{'label': 'Briefings', 'value': 'Live'}, {'label': 'Crowd risk', 'value': 'Medium'}, {'label': 'Incident severity', 'value': 'Warning'}]) }}
+    {{ ai_recommendation_panel('Why this recommendation?', 'Report logic', 'The generated briefing and alerts are built from live crowd, incident, and volunteer data.') }}
+    {{ weather_widget('rain', '18°C', 'Weather increases the need for concise exit messaging', '🌧️') }}
+    {{ sustainability_widget('Water refill station available', 'Encourage staff to walk short distances', 'Use the nearest waste sorting point', '15 kg CO2e saved (mock)') }}
+    <div class="panel glass-panel mt-4">
       {{ section_header('Broadcast alert', 'Use for urgent venue-wide communication') }}
       <form class="list-stack" data-alert-form>
         <div class="form-group">

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "components.html" import badge, section_header, stat_card, list_item %}
+{% from "components.html" import badge, section_header, stat_card, list_item, ai_recommendation_panel, weather_widget, sustainability_widget, status_widget %}
 
 {% block title %}Volunteer Console | StadiumMind AI{% endblock %}
 {% block body_class %}volunteer-console{% endblock %}
@@ -29,6 +29,17 @@
     {% for task in tasks %}
       {{ list_item(task.title, task.description, task.priority|title, 'warning' if task.priority == 'high' else 'info') }}
     {% endfor %}
+  </div>
+</section>
+
+<section class="section mt-8 dashboard-grid">
+  <div class="dashboard-column">
+    {{ status_widget('Live crowd status', 'Medium', 'medium', [{'label': 'Zone', 'value': volunteer.zone_name if volunteer else 'Assigned zone'}, {'label': 'Open tasks', 'value': tasks|length}, {'label': 'Support level', 'value': 'Guided'}]) }}
+    {{ ai_recommendation_panel('Why this recommendation?', 'Volunteer guidance', 'The guidance reflects the task location, priority, and support routes available to the volunteer.') }}
+  </div>
+  <div class="dashboard-column">
+    {{ weather_widget('cloudy', '21°C', 'Weather may make outdoor handoffs slower', '☁️') }}
+    {{ sustainability_widget('Water refill station in the volunteer corridor', 'Walk between nearby zones whenever practical', 'Dispose of paper and waste correctly', '10 kg CO₂e saved (mock)') }}
   </div>
 </section>
 {% endblock %}

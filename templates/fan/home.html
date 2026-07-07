@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "components.html" import badge, match_card, section_header, stat_card, empty_state %}
+{% from "components.html" import badge, match_card, section_header, stat_card, empty_state, ai_recommendation_panel, weather_widget, sustainability_widget, status_widget %}
 
 {% block title %}Fan Dashboard | StadiumMind AI{% endblock %}
 {% block body_class %}fan-dashboard{% endblock %}
@@ -63,8 +63,10 @@
     </div>
   </div>
   <div class="dashboard-column">
-    {{ section_header('Need help?', 'Use the quick tools from the fan menu') }}
-    {{ empty_state('Open the chat or wayfinding pages', 'The frontend is wired to existing APIs for live help.') }}
+    {{ status_widget('Live crowd status', 'Medium', 'medium', [{'label': 'Live match', 'value': live_match.home_team.name if live_match else 'No live match'}, {'label': 'Route confidence', 'value': '88%'}, {'label': 'Incident severity', 'value': 'Info'}]) }}
+    {{ ai_recommendation_panel('Why this recommendation?', 'Live fan guidance', 'Recommendations are based on live venue context, accessibility routes, and weather-aware movement.') }}
+    {{ weather_widget('clear', '24°C', 'Direct routes remain the fastest option', '☀️') }}
+    {{ sustainability_widget('Water refill station near the main concourse', 'Take the shortest indoor route when possible', 'Use the marked recycling stations', '12 kg CO₂e saved (mock)') }}
   </div>
 </section>
 {% endblock %}

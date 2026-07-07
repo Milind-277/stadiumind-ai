@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "components.html" import badge, section_header, stat_card %}
+{% from "components.html" import badge, section_header, stat_card, ai_recommendation_panel, weather_widget, sustainability_widget, status_widget %}
 
 {% block title %}Security Command | StadiumMind AI{% endblock %}
 {% block body_class %}security-command{% endblock %}
@@ -42,16 +42,10 @@
     </div>
   </div>
   <div class="dashboard-column">
-    <div class="panel glass-panel">
-      {{ section_header('Command focus', 'Open incidents first, then supporting protocols') }}
-      <div class="chips">
-        {{ badge('Crowd control', 'warning') }}
-        {{ badge('Medical', 'danger') }}
-        {{ badge('Suspicious items', 'danger') }}
-        {{ badge('Unauthorized access', 'info') }}
-      </div>
-      <p class="mt-4">Use the classify action to refresh response recommendations without navigating away.</p>
-    </div>
+    {{ status_widget('Incident severity', active_count and 'Warning' or 'Info', active_count and 'warning' or 'info', [{'label': 'Active incidents', 'value': active_count}, {'label': 'Open protocols', 'value': 'Crowd, medical, access'}, {'label': 'Crowd status', 'value': 'High'}]) }}
+    {{ ai_recommendation_panel('Why this recommendation?', 'Security intelligence', 'The classification is driven by incident severity, response protocol, and access-route risk.') }}
+    {{ weather_widget('wind', '20°C', 'Sheltered movement is recommended for response teams', '🌬️') }}
+    {{ sustainability_widget('Water refill station near command', 'Walk when moving between adjacent zones', 'Dispose of incident waste according to protocol', '13 kg CO2e saved (mock)') }}
   </div>
 </section>
 {% endblock %}

@@ -69,3 +69,81 @@
   {% if body %}<p class="mt-2">{{ body }}</p>{% endif %}
 </article>
 {%- endmacro %}
+
+{% macro intel_widget(title, body='', badge_label='', badge_variant='ghost', widget_class='') -%}
+<article class="intel-widget glass-panel {{ widget_class }}">
+  <div class="section-heading intel-widget-heading">
+    <div>
+      <h3 class="section-title">{{ title }}</h3>
+      {% if body %}<p class="page-subtitle">{{ body }}</p>{% endif %}
+    </div>
+    {% if badge_label %}{{ badge(badge_label, badge_variant) }}{% endif %}
+  </div>
+  <div class="intel-widget-body" data-intel-body>{{ caller() if caller is defined }}</div>
+</article>
+{%- endmacro %}
+
+{% macro ai_recommendation_panel(title='Why this recommendation?', confidence='82%', explanation='The recommendation is based on the current operational context.') -%}
+<section class="panel glass-panel intel-panel">
+  <div class="section-heading">
+    <div>
+      <h2 class="section-title">{{ title }}</h2>
+      <p class="page-subtitle">Explainability and confidence for the selected action</p>
+    </div>
+    <div class="confidence-pill" data-confidence-pill>{{ confidence }}</div>
+  </div>
+  <p class="intel-explanation" data-recommendation-explanation>{{ explanation }}</p>
+</section>
+{%- endmacro %}
+
+{% macro sustainability_widget(title='Sustainability', water='Water refill station nearby', walking='Walk if feasible', waste='Use marked recycling bins', carbon='12 kg CO₂ saved', icon='🌿') -%}
+<section class="panel glass-panel sustainability-widget">
+  <div class="section-heading">
+    <div>
+      <h2 class="section-title">{{ title }}</h2>
+      <p class="page-subtitle">Low-impact travel and venue guidance</p>
+    </div>
+    <span class="widget-icon" aria-hidden="true">{{ icon }}</span>
+  </div>
+  <div class="detail-list">
+    {{ detail_row('Water refill station', water) }}
+    {{ detail_row('Walking recommendation', walking) }}
+    {{ detail_row('Waste disposal guidance', waste) }}
+    {{ detail_row('Estimated carbon savings', carbon) }}
+  </div>
+</section>
+{%- endmacro %}
+
+{% macro weather_widget(condition='Partly cloudy', temperature='21°C', impact='Recommendations stay unchanged', icon='☁️') -%}
+<section class="panel glass-panel weather-widget">
+  <div class="section-heading">
+    <div>
+      <h2 class="section-title">Mock Weather</h2>
+      <p class="page-subtitle">Weather influences movement guidance and route planning</p>
+    </div>
+    <span class="widget-icon" aria-hidden="true">{{ icon }}</span>
+  </div>
+  <div class="detail-list">
+    {{ detail_row('Condition', condition) }}
+    {{ detail_row('Temperature', temperature) }}
+    {{ detail_row('Recommendation impact', impact) }}
+  </div>
+</section>
+{%- endmacro %}
+
+{% macro status_widget(title, status_label, badge_variant, rows=[]) -%}
+<section class="panel glass-panel status-widget">
+  <div class="section-heading">
+    <div>
+      <h2 class="section-title">{{ title }}</h2>
+      <p class="page-subtitle">Live operational status</p>
+    </div>
+    {{ badge(status_label, badge_variant) }}
+  </div>
+  <div class="detail-list">
+    {% for row in rows %}
+      {{ detail_row(row.label, row.value) }}
+    {% endfor %}
+  </div>
+</section>
+{%- endmacro %}

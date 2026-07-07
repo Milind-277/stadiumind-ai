@@ -31,6 +31,15 @@
 
     <div class="toolbar" aria-label="Accessibility controls">
       <span class="high-contrast-hint" data-high-contrast-hint>Keyboard-friendly. Adjustable text size.</span>
+      <label class="language-control" for="ui-language-select">
+        <span class="sr-only">UI language</span>
+        <select id="ui-language-select" class="form-select form-select-sm" data-language-select aria-label="Select interface language">
+          <option value="en">English</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+        </select>
+      </label>
       <button type="button" class="btn btn-ghost btn-sm" data-theme-toggle aria-pressed="false" aria-label="Toggle high contrast mode">Contrast</button>
       <button type="button" class="btn btn-ghost btn-sm" data-motion-toggle aria-pressed="false" aria-label="Toggle reduced motion">Motion</button>
       <button type="button" class="btn btn-ghost btn-sm" data-font-decrease aria-label="Decrease font size">A−</button>
