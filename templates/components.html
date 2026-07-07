@@ -1,0 +1,71 @@
+{% macro badge(label, variant='ghost') -%}
+<span class="badge badge-{{ variant }}">{{ label }}</span>
+{%- endmacro %}
+
+{% macro stat_card(label, value, subtitle='', variant='gold', icon='') -%}
+<article class="stat-card card-glow-{{ variant }}">
+  {% if icon %}
+  <div class="stat-icon" aria-hidden="true">{{ icon }}</div>
+  {% endif %}
+  <div class="stat-label">{{ label }}</div>
+  <div class="stat-value">{{ value }}</div>
+  {% if subtitle %}<div class="stat-sub">{{ subtitle }}</div>{% endif %}
+</article>
+{%- endmacro %}
+
+{% macro section_header(title, subtitle='', action='') -%}
+<div class="section-heading">
+  <div>
+    <h2 class="section-title">{{ title }}</h2>
+    {% if subtitle %}<p class="page-subtitle">{{ subtitle }}</p>{% endif %}
+  </div>
+  {% if action %}<div>{{ action|safe }}</div>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro empty_state(title, body='') -%}
+<div class="empty-state">
+  <h3>{{ title }}</h3>
+  {% if body %}<p>{{ body }}</p>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro match_card(match, live=False) -%}
+<article class="match-card{% if live %} live{% endif %}" aria-label="{{ match.home_team.name }} versus {{ match.away_team.name }}">
+  <div class="team-block">
+    <div class="team-flag" aria-hidden="true">{{ match.home_team.flag }}</div>
+    <div>
+      <div class="team-name">{{ match.home_team.name }}</div>
+      <div class="team-code">{{ match.home_team.code }}</div>
+    </div>
+  </div>
+  <div class="match-score">
+    <div class="score-value">{{ match.score }}</div>
+    <div class="match-meta">{{ match.kickoff_display }}</div>
+  </div>
+  <div class="team-block away">
+    <div class="team-flag" aria-hidden="true">{{ match.away_team.flag }}</div>
+    <div>
+      <div class="team-name">{{ match.away_team.name }}</div>
+      <div class="team-code">{{ match.away_team.code }}</div>
+    </div>
+  </div>
+</article>
+{%- endmacro %}
+
+{% macro detail_row(label, value) -%}
+<div class="detail-row">
+  <span class="detail-label">{{ label }}</span>
+  <span class="detail-value">{{ value }}</span>
+</div>
+{%- endmacro %}
+
+{% macro list_item(title, body='', badge_label='', badge_variant='ghost') -%}
+<article class="list-item">
+  <div class="flex justify-between items-center gap-4">
+    <strong>{{ title }}</strong>
+    {% if badge_label %}{{ badge(badge_label, badge_variant) }}{% endif %}
+  </div>
+  {% if body %}<p class="mt-2">{{ body }}</p>{% endif %}
+</article>
+{%- endmacro %}

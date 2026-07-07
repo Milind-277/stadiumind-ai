@@ -3,7 +3,7 @@
    FIFA World Cup 2026 · Dark Theme · Premium Design
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Bebas+Neue&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;800&family=Bebas+Neue&display=swap');
 
 :root {
   /* ── Color Palette ─────────────────────────────────────────── */
@@ -48,8 +48,8 @@
   --clr-text-inverse:   #050D1B;
 
   /* ── Typography Scale ───────────────────────────────────────── */
-  --font-sans:    'Inter', system-ui, -apple-system, sans-serif;
-  --font-display: 'Bebas Neue', 'Inter', sans-serif;
+  --font-sans:    'Space Grotesk', system-ui, sans-serif;
+  --font-display: 'Bebas Neue', 'Space Grotesk', sans-serif;
 
   --text-xs:    0.6875rem;   /* 11px */
   --text-sm:    0.8125rem;   /* 13px */

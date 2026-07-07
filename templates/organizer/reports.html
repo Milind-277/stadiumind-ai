@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% from "components.html" import badge, section_header %}
+
+{% block title %}Organizer Reports | StadiumMind AI{% endblock %}
+{% block body_class %}organizer-reports{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-panel glass-panel">
+    <div class="hero-kicker">Reports and alerts</div>
+    <h1 class="hero-title">Generate operational briefing and broadcast alerts.</h1>
+    <p class="hero-copy">Use the built-in APIs to generate briefings or issue venue alerts without leaving the dashboard.</p>
+  </div>
+  <aside class="panel glass-panel">
+    {{ section_header('Response tools', 'Briefings and broadcast controls') }}
+    <div class="chips">
+      {{ badge('Briefing', 'info') }}
+      {{ badge('Broadcast', 'danger') }}
+      {{ badge('Operations', 'gold') }}
+    </div>
+  </aside>
+</section>
+
+<section class="section mt-8 dashboard-grid">
+  <div class="dashboard-column">
+    <div class="panel glass-panel">
+      {{ section_header('Generate report', 'Creates an operational briefing from venue data') }}
+      <form class="inline-form" data-report-form>
+        <div class="form-group">
+          <label class="form-label" for="report-venue">Venue ID</label>
+          <input class="form-input" id="report-venue" name="venue_id" type="text" value="v001" aria-label="Venue identifier">
+        </div>
+        <button type="submit" class="btn btn-primary">Generate</button>
+      </form>
+      <div class="result-panel mt-4" data-report-output></div>
+    </div>
+  </div>
+  <div class="dashboard-column">
+    <div class="panel glass-panel">
+      {{ section_header('Broadcast alert', 'Use for urgent venue-wide communication') }}
+      <form class="list-stack" data-alert-form>
+        <div class="form-group">
+          <label class="form-label" for="alert-title">Title</label>
+          <input class="form-input" id="alert-title" name="title" type="text" placeholder="Crowd warning" required aria-required="true">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="alert-message">Message</label>
+          <textarea class="form-textarea" id="alert-message" name="message" placeholder="Use the south exit and follow staff directions." required aria-required="true"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="alert-priority">Priority</label>
+          <select class="form-select" id="alert-priority" name="priority">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="alert-venue">Venue ID</label>
+          <input class="form-input" id="alert-venue" name="venue_id" type="text" value="v001" aria-label="Venue identifier">
+        </div>
+        <button type="submit" class="btn btn-danger">Broadcast alert</button>
+      </form>
+      <div class="result-panel mt-4" data-alert-output></div>
+    </div>
+  </div>
+</section>
+{% endblock %}

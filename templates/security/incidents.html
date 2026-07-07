@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% from "components.html" import badge, section_header, empty_state %}
+
+{% block title %}Security Incidents | StadiumMind AI{% endblock %}
+{% block body_class %}security-incidents{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-panel glass-panel">
+    <div class="hero-kicker">Security incidents</div>
+    <h1 class="hero-title">Review incident records with context.</h1>
+    <p class="hero-copy">A professional incident list with quick classification buttons and responsive layouts for mobile and desktop.</p>
+  </div>
+  <aside class="panel glass-panel">
+    {{ section_header('Incident list', 'All available records') }}
+    <div class="chips">
+      {{ badge(incidents|length ~ ' incidents', 'info') }}
+    </div>
+  </aside>
+</section>
+
+<section class="section mt-8">
+  <div class="list-stack">
+    {% for incident in incidents %}
+      <article class="panel glass-panel">
+        <div class="section-heading">
+          <div>
+            <h2 class="section-title">{{ incident.zone_name }}</h2>
+            <p class="page-subtitle">{{ incident.type|title }} · {{ incident.reported_at }}</p>
+          </div>
+          <div class="chips">
+            {{ badge(incident.severity|title, 'danger' if incident.severity in ['critical', 'high'] else 'warning') }}
+            {{ badge(incident.status|title, 'info') }}
+          </div>
+        </div>
+        <p>{{ incident.description }}</p>
+        <div class="result-panel mt-4" data-incident-output="{{ incident.id }}"></div>
+        <div class="mt-4">
+          <button type="button" class="btn btn-primary btn-sm" data-classify-incident="{{ incident.id }}">Classify incident</button>
+        </div>
+      </article>
+    {% else %}
+      {{ empty_state('No incidents found', 'Incident records will appear here when loaded from the backend.') }}
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en" data-motion="{{ 'reduced' if session.get('reduce_motion') else '' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>{% block title %}StadiumMind AI{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/layouts.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/frontend.css') }}">
+  <script defer src="{{ url_for('static', filename='js/app.js') }}"></script>
+</head>
+<body class="app-body {{ body_class|default('') }}">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <header class="topbar glass-panel" role="banner">
+    <div class="brand-block">
+      <a class="brand-link" href="{{ url_for('core.landing') }}" aria-label="StadiumMind home">
+        <span class="brand-mark" aria-hidden="true">S</span>
+        <span class="brand-copy">
+          <span class="eyebrow">FIFA World Cup 2026</span>
+          <span class="brand-title">StadiumMind AI</span>
+          <span class="brand-subtitle">Operations intelligence for live venues</span>
+        </span>
+      </a>
+    </div>
+
+    <div class="toolbar" aria-label="Accessibility controls">
+      <span class="high-contrast-hint" data-high-contrast-hint>Keyboard-friendly. Adjustable text size.</span>
+      <button type="button" class="btn btn-ghost btn-sm" data-theme-toggle aria-pressed="false" aria-label="Toggle high contrast mode">Contrast</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-motion-toggle aria-pressed="false" aria-label="Toggle reduced motion">Motion</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-font-decrease aria-label="Decrease font size">A−</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-font-reset aria-label="Reset font size">AA</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-font-increase aria-label="Increase font size">A+</button>
+      {% if session.get('role') %}
+        <a class="btn btn-primary btn-sm" href="{{ url_for('core.switch_role') }}">Switch role</a>
+      {% endif %}
+    </div>
+  </header>
+
+  <main id="main-content" class="page-shell" tabindex="-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="page-footer" role="contentinfo">
+    <div>StadiumMind AI tracks crowd, venue, volunteer, and security operations in real time.</div>
+  </footer>
+</body>
+</html>

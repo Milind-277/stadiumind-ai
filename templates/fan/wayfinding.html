@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% from "components.html" import badge, section_header, stat_card %}
+
+{% block title %}Fan Wayfinding | StadiumMind AI{% endblock %}
+{% block body_class %}fan-wayfinding{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-panel glass-panel">
+    <div class="hero-kicker">Wayfinding</div>
+    <h1 class="hero-title">Get to your destination without friction.</h1>
+    <p class="hero-copy">Submit your destination and receive live route guidance that respects crowd flow and accessibility needs.</p>
+  </div>
+  <aside class="panel glass-panel">
+    {{ section_header('Route tools', 'Built for quick navigation') }}
+    <div class="detail-list">
+      {{ stat_card('Best gate', 'Calculated live', 'Decision support from the backend', 'blue', '🚪') }}
+      {{ stat_card('Crowd avoidance', 'Included', 'Safer alternative routes', 'danger', '↔️') }}
+    </div>
+  </aside>
+</section>
+
+<section class="section mt-8 dashboard-grid">
+  <div class="dashboard-column">
+    <div class="panel glass-panel">
+      {{ section_header('Find your route', 'Use the existing API-backed guidance engine') }}
+      <form class="inline-form" data-wayfinding-form>
+        <input type="hidden" name="venue_id" value="{{ venue_id }}">
+        <div class="form-group">
+          <label class="form-label" for="destination">Destination</label>
+          <input class="form-input" id="destination" name="destination" type="text" placeholder="Food Court East, Gate A, Medical Bay A" required aria-required="true">
+        </div>
+        <button type="submit" class="btn btn-primary">Get guidance</button>
+      </form>
+      <div class="result-panel" data-wayfinding-result data-empty="true" data-placeholder="Your route guidance will appear here."></div>
+    </div>
+  </div>
+  <div class="dashboard-column">
+    <div class="panel glass-panel">
+      {{ section_header('Accessibility note', 'Front-end only, keyboard friendly') }}
+      <p>The guidance uses the same JSON-backed venue data as the rest of the application and includes accessibility-aware recommendations.</p>
+      <div class="chips">
+        {{ badge('Keyboard friendly', 'success') }}
+        {{ badge('High contrast', 'info') }}
+        {{ badge('Reduced motion', 'ghost') }}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

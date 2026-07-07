@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% from "components.html" import badge, stat_card %}
+
+{% block title %}StadiumMind AI | Landing{% endblock %}
+{% block body_class %}landing-page-view{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-panel glass-panel animate-fade-in-up">
+    <div class="hero-kicker">Operational command for match day</div>
+    <h1 class="hero-title">A professional control room for every stadium role.</h1>
+    <p class="hero-copy">
+      Choose your role to enter a focused dashboard for fans, organizers, volunteers, or security.
+      The interface is optimized for fast decisions, keyboard use, and mobile screens.
+    </p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="#roles">Select a role</a>
+      <a class="btn btn-ghost" href="{{ url_for('core.health') }}">Health check</a>
+    </div>
+    <div class="hero-meta" aria-label="Platform highlights">
+      <div class="meta-chip">Glassmorphism UI<strong>Clean visibility in live operations</strong></div>
+      <div class="meta-chip">Accessible by design<strong>Keyboard, contrast, and motion controls</strong></div>
+      <div class="meta-chip">Role-based workflows<strong>Focused pages for each persona</strong></div>
+      <div class="meta-chip">JSON-backed data<strong>Matches the existing Flask architecture</strong></div>
+    </div>
+  </div>
+
+  <aside class="panel glass-panel animate-scale-in delay-100" aria-labelledby="role-heading">
+    <div class="section-heading" id="role-heading">
+      <div>
+        <h2 class="section-title">Quick status</h2>
+        <p class="page-subtitle">Open a role to begin.</p>
+      </div>
+      {{ badge('Live', 'live') }}
+    </div>
+    <div class="detail-list">
+      {{ stat_card('Fan support', 'Wayfinding + chat', 'Navigation and assistance', 'gold', '🎟️') }}
+      {{ stat_card('Organizer ops', 'Crowd + reports', 'Operational overview', 'blue', '📊') }}
+      {{ stat_card('Volunteer desk', 'Tasks + guidance', 'Actionable support', 'success', '🧭') }}
+      {{ stat_card('Security center', 'Incidents + alerts', 'Safety and escalation', 'danger', '🛡️') }}
+    </div>
+  </aside>
+</section>
+
+<section id="roles" class="section mt-8">
+  <div class="section-header">
+    <h2 class="section-title">Role Selector</h2>
+    <p class="page-subtitle">Pick the dashboard that matches your responsibilities.</p>
+  </div>
+  <div class="selector-grid" role="list" aria-label="Role selection options">
+    <form class="role-form" method="post" action="{{ url_for('core.select_role') }}" role="listitem">
+      <input type="hidden" name="role" value="fan">
+      <button type="submit" class="role-card fan glass-panel" aria-label="Enter the fan dashboard">
+        <span class="role-icon" aria-hidden="true">🏟️</span>
+        <span class="role-name">Fan</span>
+        <span class="role-desc">Get live wayfinding, chat help, and match-day venue details.</span>
+      </button>
+    </form>
+    <form class="role-form" method="post" action="{{ url_for('core.select_role') }}" role="listitem">
+      <input type="hidden" name="role" value="organizer">
+      <button type="submit" class="role-card organizer glass-panel" aria-label="Enter the organizer dashboard">
+        <span class="role-icon" aria-hidden="true">📈</span>
+        <span class="role-name">Organizer</span>
+        <span class="role-desc">Monitor crowd pressure, reports, and venue-level operational briefing.</span>
+      </button>
+    </form>
+    <form class="role-form" method="post" action="{{ url_for('core.select_role') }}" role="listitem">
+      <input type="hidden" name="role" value="volunteer">
+      <button type="submit" class="role-card volunteer glass-panel" aria-label="Enter the volunteer dashboard">
+        <span class="role-icon" aria-hidden="true">🧤</span>
+        <span class="role-name">Volunteer</span>
+        <span class="role-desc">Review tasks, ask for guidance, and stay aligned to assigned zones.</span>
+      </button>
+    </form>
+    <form class="role-form" method="post" action="{{ url_for('core.select_role') }}" role="listitem">
+      <input type="hidden" name="role" value="security">
+      <button type="submit" class="role-card security glass-panel" aria-label="Enter the security dashboard">
+        <span class="role-icon" aria-hidden="true">🛡️</span>
+        <span class="role-name">Security</span>
+        <span class="role-desc">Track incidents, escalate urgent issues, and manage response protocols.</span>
+      </button>
+    </form>
+  </div>
+</section>
+{% endblock %}

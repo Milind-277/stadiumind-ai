@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "components.html" import badge, section_header, empty_state %}
+
+{% block title %}Volunteer Tasks | StadiumMind AI{% endblock %}
+{% block body_class %}volunteer-tasks{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-panel glass-panel">
+    <div class="hero-kicker">Volunteer tasks</div>
+    <h1 class="hero-title">Get guidance for every assignment.</h1>
+    <p class="hero-copy">Each task card can request live guidance through the existing API and render the response inline.</p>
+  </div>
+  <aside class="panel glass-panel">
+    {{ section_header('Task view', 'Accessible and mobile friendly') }}
+    <div class="chips">
+      {{ badge('Guidance', 'info') }}
+      {{ badge('Escalation', 'danger') }}
+      {{ badge('Support', 'success') }}
+    </div>
+  </aside>
+</section>
+
+<section class="section mt-8">
+  <div class="list-stack">
+    {% for task in tasks %}
+      <article class="panel glass-panel">
+        <div class="section-heading">
+          <div>
+            <h2 class="section-title">{{ task.title }}</h2>
+            <p class="page-subtitle">{{ task.zone_name }} · {{ task.priority|title }} priority</p>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" data-task-guidance="{{ task.id }}">Get guidance</button>
+        </div>
+        <p>{{ task.description }}</p>
+        {% if task.ai_guidance %}
+          <div class="notice mt-4"><strong>Saved guidance</strong><span>{{ task.ai_guidance }}</span></div>
+        {% endif %}
+        <div class="result-panel mt-4" data-task-output="{{ task.id }}"></div>
+      </article>
+    {% else %}
+      {{ empty_state('No tasks assigned', 'Tasks will appear here once they are allocated to the volunteer.') }}
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

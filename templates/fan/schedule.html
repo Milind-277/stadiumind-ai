@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "components.html" import badge, match_card, section_header, empty_state %}
+
+{% block title %}Fan Schedule | StadiumMind AI{% endblock %}
+{% block body_class %}fan-schedule{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-panel glass-panel">
+    <div class="hero-kicker">Fan schedule</div>
+    <h1 class="hero-title">Plan your match day.</h1>
+    <p class="hero-copy">Review every available fixture in one place and jump back to the dashboard when you are ready.</p>
+  </div>
+  <aside class="panel glass-panel">
+    {{ section_header('Schedule snapshot', 'All fixtures listed below') }}
+    {{ badge(matches|length ~ ' matches', 'info') }}
+  </aside>
+</section>
+
+<section class="section mt-8">
+  <div class="list-stack">
+    {% for match in matches %}
+      {{ match_card(match, match.is_live) }}
+    {% else %}
+      {{ empty_state('No matches available', 'The schedule will appear when match data is loaded.') }}
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "components.html" import badge, section_header, stat_card %}
+
+{% block title %}Organizer Crowd | StadiumMind AI{% endblock %}
+{% block body_class %}organizer-crowd{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-panel glass-panel">
+    <div class="hero-kicker">Crowd operations</div>
+    <h1 class="hero-title">Inspect crowd flow on demand.</h1>
+    <p class="hero-copy">Load live crowd data for any venue and inspect occupancy, bottlenecks, and current flow conditions.</p>
+  </div>
+  <aside class="panel glass-panel">
+    {{ section_header('Live lookup', 'Use the current venue identifier') }}
+    {{ stat_card('Default venue', 'v001', 'Change the venue ID if needed', 'blue', '🏟️') }}
+  </aside>
+</section>
+
+<section class="section mt-8 dashboard-grid">
+  <div class="dashboard-column">
+    <div class="panel glass-panel">
+      {{ section_header('Load live crowd data', 'Powered by the existing organizer API') }}
+      <form class="inline-form" data-organizer-crowd-form>
+        <div class="form-group">
+          <label class="form-label" for="crowd-venue">Venue ID</label>
+          <input class="form-input" id="crowd-venue" name="venue_id" type="text" value="v001" aria-label="Venue identifier">
+        </div>
+        <button type="submit" class="btn btn-primary">Refresh</button>
+      </form>
+      <div class="result-panel mt-4" data-organizer-crowd-output></div>
+    </div>
+  </div>
+  <div class="dashboard-column">
+    <div class="panel glass-panel">
+      {{ section_header('Interpretation', 'Use the output to guide deployment') }}
+      <div class="chips">
+        {{ badge('Occupancy', 'warning') }}
+        {{ badge('Bottlenecks', 'danger') }}
+        {{ badge('Flow control', 'info') }}
+      </div>
+      <p class="mt-4">The dashboard remains fully keyboard accessible and mobile responsive.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}
