@@ -18,6 +18,7 @@
 - [Accessibility](#accessibility)
 - [Future Scope](#future-scope)
 - [Screenshots](#screenshots)
+- [Live Demo](#live-demo)
 
 ---
 
@@ -345,6 +346,12 @@ ruff check .
 # Run with debug reload
 FLASK_DEBUG=true python run.py
 ```
+
+---
+
+## Live Demo
+
+https://stadiumind-ai.onrender.com
 
 ---
 
