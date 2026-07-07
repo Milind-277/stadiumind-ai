@@ -100,6 +100,13 @@ stadiumind-ai/
 │   │   └── frontend.css      # Page-specific glassmorphism styles
 │   └── js/
 │       └── app.js            # Client-side interactivity (vanilla JS)
+├── screenshots/
+│   ├── landing.jpeg
+│   ├── fan-dashboard.jpeg
+│   ├── fan-chat.jpeg
+│   ├── organizer-dashboard.jpeg
+│   ├── security-command.jpeg
+│   └── volunteer-tasks.jpeg
 ├── run.py                    # Development server entry point
 ├── requirements.txt
 ├── requirements-dev.txt
