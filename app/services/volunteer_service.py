@@ -2,22 +2,66 @@
 import logging
 from typing import Dict, List, Optional
 
+from app.ai.decision_engine import DecisionEngine
+from app.ai import ai_service
 from app.repositories.volunteer_repo import VolunteerRepository, TaskRepository
 from app.repositories.incident_repo import IncidentRepository
 from app.models.volunteer import TaskStatus
 from app.utils.datetime_utils import utcnow_iso
-from app.ai import ai_service
 
 logger = logging.getLogger(__name__)
 
 
 class VolunteerService:
+    """Volunteer-facing business logic for tasks, guidance, and SOS flows."""
+
     def __init__(self, data_dir: str = "data"):
+        """Initialise repositories and the decision engine."""
         self.volunteers = VolunteerRepository(data_dir)
         self.tasks = TaskRepository(data_dir)
         self.incidents = IncidentRepository(data_dir)
+        self.decision_engine = DecisionEngine(data_dir)
+
+    def _build_decision_support(self, volunteer, task) -> Dict:
+        """Build a JSON-serializable decision support payload for volunteers."""
+        accessibility_needs = []
+        if any("accessibility" in skill.lower() for skill in volunteer.skills):
+            accessibility_needs.append("accessibility_support")
+        language = volunteer.languages[0] if volunteer.languages else "English"
+
+        try:
+            context = self.decision_engine.build_context(
+                user_role="volunteer",
+                venue_id=volunteer.venue_id,
+                accessibility_needs=accessibility_needs,
+                language=language,
+            )
+            decision = self.decision_engine.decide(context)
+            logger.info(
+                "Decision support built for volunteer service volunteer_id=%s task_id=%s best_gate=%s",
+                volunteer.id,
+                task.id,
+                decision["best_gate"],
+            )
+            return decision
+        except Exception as exc:
+            logger.exception(
+                "Decision support fallback for volunteer service volunteer_id=%s task_id=%s",
+                volunteer.id,
+                task.id,
+            )
+            return {
+                "best_gate": "Main gate",
+                "navigation_advice": ["Follow the closest marked route to your assigned zone."],
+                "crowd_avoidance": ["Avoid high-density areas until directed otherwise."],
+                "emergency_actions": ["No immediate emergency action required."],
+                "accessibility_recommendations": ["Ask a supervisor for assistance if needed."],
+                "transportation_suggestion": "Use the venue's nearest transit option.",
+                "error": str(exc),
+            }
 
     def get_volunteer_by_id(self, volunteer_id: str) -> Optional[Dict]:
+        """Return a volunteer profile as a JSON-serializable dictionary."""
         vol = self.volunteers.find_by_id(volunteer_id)
         if not vol:
             return None
@@ -87,26 +131,57 @@ class VolunteerService:
         vol = self.volunteers.find_by_id(volunteer_id)
         task = self.tasks.find_by_id(task_id)
         if not vol or not task:
+            logger.warning(
+                "Task guidance requested for missing volunteer_id=%s task_id=%s",
+                volunteer_id,
+                task_id,
+            )
             return {"error": "Volunteer or task not found"}
 
-        result = ai_service.ask("volunteer", "volunteer_guidance", {
-            "volunteer_name": vol.name,
-            "zone_name": task.zone_name,
-            "task_title": task.title,
-            "task_description": task.description,
-            "priority": task.priority.value,
-            "skills": ", ".join(vol.skills),
-            "languages": ", ".join(vol.languages),
-        })
+        decision_support = self._build_decision_support(vol, task)
+
+        try:
+            result = ai_service.ask("volunteer", "volunteer_guidance", {
+                "volunteer_name": vol.name,
+                "zone_name": task.zone_name,
+                "task_title": task.title,
+                "task_description": task.description,
+                "priority": task.priority.value,
+                "skills": ", ".join(vol.skills),
+                "languages": ", ".join(vol.languages),
+            })
+            guidance = result.data
+            fallback_used = result.fallback_used
+        except Exception:
+            logger.exception(
+                "Volunteer guidance AI fallback volunteer_id=%s task_id=%s",
+                volunteer_id,
+                task_id,
+            )
+            guidance = {
+                "guidance": (
+                    f"Follow the decision support plan for {task.title} near {task.zone_name}."
+                ),
+                "steps": (
+                    decision_support["navigation_advice"]
+                    + decision_support["crowd_avoidance"]
+                    + decision_support["emergency_actions"]
+                )[:5],
+                "fan_phrases": ["How can I help you today?", "Please follow me, I'll show you the way."],
+                "safety_notes": "Keep routes clear and escalate any safety concern immediately.",
+                "escalate_if": "Any situation involving physical danger, medical emergency, or security threat.",
+            }
+            fallback_used = True
 
         # Persist AI guidance back to the task
-        self.tasks.update(task_id, {"ai_guidance": result.data.get("guidance", "")})
+        self.tasks.update(task_id, {"ai_guidance": guidance.get("guidance", "")})
 
         return {
             "task_id": task_id,
-            "guidance": result.data,
+            "guidance": guidance,
             "ai_powered": True,
-            "fallback_used": result.fallback_used,
+            "fallback_used": fallback_used,
+            "decision_support": decision_support,
         }
 
     def submit_sos(self, volunteer_id: str, description: str, zone_id: str, zone_name: str, venue_id: str) -> Dict:

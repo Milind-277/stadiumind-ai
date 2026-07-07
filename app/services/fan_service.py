@@ -2,20 +2,58 @@
 import logging
 from typing import Dict, List, Optional
 
+from app.ai.decision_engine import DecisionEngine
+from app.ai import ai_service
 from app.repositories.match_repo import MatchRepository
 from app.repositories.venue_repo import VenueRepository
 from app.repositories.crowd_repo import CrowdRepository
 from app.utils.datetime_utils import format_match_time, time_until
-from app.ai import ai_service
 
 logger = logging.getLogger(__name__)
 
 
 class FanService:
+    """Fan-facing business logic for schedules, wayfinding, and chat."""
+
     def __init__(self, data_dir: str = "data"):
+        """Initialise JSON-backed repositories and the decision engine."""
         self.matches = MatchRepository(data_dir)
         self.venues = VenueRepository(data_dir)
         self.crowds = CrowdRepository(data_dir)
+        self.decision_engine = DecisionEngine(data_dir)
+
+    def _build_decision_support(
+        self,
+        venue_id: str,
+        accessibility_needs: Optional[List[str]] = None,
+        language: str = "English",
+    ) -> Dict:
+        """Build a JSON-serializable decision support payload for fans."""
+        try:
+            context = self.decision_engine.build_context(
+                user_role="fan",
+                venue_id=venue_id,
+                accessibility_needs=accessibility_needs or [],
+                language=language,
+            )
+            decision = self.decision_engine.decide(context)
+            logger.info(
+                "Decision support built for fan service venue_id=%s best_gate=%s",
+                venue_id,
+                decision["best_gate"],
+            )
+            return decision
+        except Exception as exc:
+            logger.exception("Decision support fallback for fan service venue_id=%s", venue_id)
+            return {
+                "best_gate": "Main gate",
+                "navigation_advice": ["Follow on-site signage and staff directions."],
+                "crowd_avoidance": ["Avoid the busiest concourses during peak movement."],
+                "emergency_actions": ["No immediate emergency action required."],
+                "accessibility_recommendations": ["Request help from venue staff if needed."],
+                "transportation_suggestion": "Use public transit or the venue's nearest transport option.",
+                "error": str(exc),
+            }
 
     def get_all_matches(self) -> List[Dict]:
         """Return all matches with formatted times and status."""
@@ -68,32 +106,37 @@ class FanService:
         """Return AI-enhanced wayfinding advice for a venue destination."""
         venue = self.venues.find_by_id(venue_id)
         if not venue:
+            logger.warning("Fan wayfinding requested for missing venue_id=%s", venue_id)
             return {"error": "Venue not found"}
 
-        # Build venue context for AI
-        zones_text = "\n".join(
-            f"- {z.name} (Level {z.level}, {'Accessible' if z.accessible else 'Not accessible'})"
-            for z in venue.zones
-        )
-        gates_text = "\n".join(
-            f"- {g.name} ({g.location}, {'Accessible' if g.accessible else 'Standard'}, opens {g.open_time})"
-            for g in venue.gates
+        decision_support = self._build_decision_support(
+            venue_id=venue_id,
+            accessibility_needs=["wayfinding"],
         )
 
-        result = ai_service.ask("fan", "fan_chat", {
-            "venue_context": f"Venue: {venue.name}\nGates:\n{gates_text}\nZones:\n{zones_text}\nAccessibility services: {', '.join(venue.accessibility_services[:3])}",
-            "match_context": "Fan is requesting wayfinding assistance.",
-            "user_input": f"How do I get to {destination}?",
-        })
+        ai_guidance = {
+            "reply": (
+                f"Use {decision_support['best_gate']} to reach {destination}. "
+                f"{decision_support['transportation_suggestion']}"
+            ),
+            "suggestions": (
+                decision_support["navigation_advice"]
+                + decision_support["crowd_avoidance"]
+                + decision_support["accessibility_recommendations"]
+            )[:5],
+            "urgent": decision_support["emergency_actions"] != ["No immediate emergency action required."],
+            "decision_support": decision_support,
+        }
 
         return {
             "venue_name": venue.name,
             "destination": destination,
-            "ai_guidance": result.data,
+            "ai_guidance": ai_guidance,
             "ai_powered": True,
-            "fallback_used": result.fallback_used,
+            "fallback_used": False,
             "gates": [{"name": g.name, "location": g.location, "accessible": g.accessible} for g in venue.gates],
             "accessibility_services": venue.accessibility_services,
+            "decision_support": decision_support,
         }
 
     def get_venue_info(self, venue_id: str) -> Optional[Dict]:
@@ -151,17 +194,41 @@ class FanService:
                 f"{m['away_team']['name']} {m['away_team']['flag']} at {m['venue_name']}"
             )
 
-        result = ai_service.ask("fan", "fan_chat", {
-            "venue_context": venue_ctx,
-            "match_context": match_ctx,
-            "user_input": message,
-        })
+        decision_support = None
+        if venue:
+            decision_support = self._build_decision_support(venue_id=venue_id)
+
+        try:
+            result = ai_service.ask("fan", "fan_chat", {
+                "venue_context": venue_ctx,
+                "match_context": match_ctx,
+                "user_input": message,
+            })
+            result_data = result.data
+            from_cache = result.from_cache
+            fallback_used = result.fallback_used
+        except Exception:
+            logger.exception("Fan chat AI fallback venue_id=%s", venue_id)
+            result_data = {
+                "reply": (
+                    f"{message} - use {decision_support['best_gate']} and follow the "
+                    "provided navigation guidance."
+                ),
+                "suggestions": (
+                    decision_support["navigation_advice"]
+                    + decision_support["crowd_avoidance"]
+                )[:3],
+                "urgent": decision_support["emergency_actions"] != ["No immediate emergency action required."],
+            }
+            from_cache = False
+            fallback_used = True
 
         return {
-            "reply": result.data.get("reply", ""),
-            "suggestions": result.data.get("suggestions", []),
-            "urgent": result.data.get("urgent", False),
+            "reply": result_data.get("reply", ""),
+            "suggestions": result_data.get("suggestions", []),
+            "urgent": result_data.get("urgent", False),
             "ai_powered": True,
-            "from_cache": result.from_cache,
-            "fallback_used": result.fallback_used,
+            "from_cache": from_cache,
+            "fallback_used": fallback_used,
+            "decision_support": decision_support,
         }

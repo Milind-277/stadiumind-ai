@@ -3,25 +3,59 @@ import logging
 import random
 from typing import Dict, List
 
+from app.ai.decision_engine import DecisionEngine
+from app.ai import ai_service
 from app.repositories.crowd_repo import CrowdRepository
 from app.repositories.incident_repo import IncidentRepository
 from app.repositories.volunteer_repo import VolunteerRepository, TaskRepository
 from app.repositories.match_repo import MatchRepository
 from app.repositories.venue_repo import VenueRepository
 from app.utils.datetime_utils import utcnow_iso
-from app.ai import ai_service
 
 logger = logging.getLogger(__name__)
 
 
 class OrganizerService:
+    """Organizer-facing business logic for operations and reporting."""
+
     def __init__(self, data_dir: str = "data"):
+        """Initialise repositories and the decision engine."""
         self.crowds = CrowdRepository(data_dir)
         self.incidents = IncidentRepository(data_dir)
         self.volunteers = VolunteerRepository(data_dir)
         self.tasks = TaskRepository(data_dir)
         self.matches = MatchRepository(data_dir)
         self.venues = VenueRepository(data_dir)
+        self.decision_engine = DecisionEngine(data_dir)
+
+    def _build_decision_support(self, venue_id: str) -> Dict:
+        """Build a JSON-serializable decision support payload for organizers."""
+        try:
+            context = self.decision_engine.build_context(
+                user_role="organizer",
+                venue_id=venue_id,
+            )
+            decision = self.decision_engine.decide(context)
+            logger.info(
+                "Decision support built for organizer service venue_id=%s best_gate=%s",
+                venue_id,
+                decision["best_gate"],
+            )
+            return decision
+        except Exception as exc:
+            logger.exception(
+                "Decision support fallback for organizer service venue_id=%s",
+                venue_id,
+            )
+            return {
+                "best_gate": "Main gate",
+                "navigation_advice": ["Review live venue signage and traffic flows."],
+                "crowd_avoidance": ["Avoid bottleneck areas until density improves."],
+                "emergency_actions": ["No immediate emergency action required."],
+                "accessibility_recommendations": ["Confirm accessible routes with venue staff."],
+                "transportation_suggestion": "Use the venue's nearest transit option.",
+                "error": str(exc),
+            }
 
     def get_dashboard_summary(self) -> Dict:
         """Return aggregated dashboard data for all venues."""
@@ -103,7 +137,10 @@ class OrganizerService:
         snapshot = self.crowds.find_latest_by_venue(venue_id)
         venue = self.venues.find_by_id(venue_id)
         if not snapshot or not venue:
+            logger.warning("Crowd analysis requested for missing venue_id=%s", venue_id)
             return {"error": "Venue or crowd data not found"}
+
+        decision_support = self._build_decision_support(venue_id)
 
         zone_text = "\n".join(
             f"- {z.zone_name}: {z.current_count}/{z.capacity} ({z.occupancy_pct}%) — {z.density_level.value}"
@@ -111,28 +148,52 @@ class OrganizerService:
         )
         bottleneck_text = ", ".join(snapshot.bottleneck_zones) or "None"
 
-        result = ai_service.ask("organizer", "crowd_analysis", {
-            "venue_name": venue.name,
-            "timestamp": snapshot.timestamp,
-            "total_attendance": str(snapshot.total_attendance),
-            "venue_capacity": str(snapshot.venue_capacity),
-            "occupancy_pct": str(snapshot.overall_occupancy_pct),
-            "zone_data": zone_text,
-            "bottleneck_zones": bottleneck_text,
-        })
+        try:
+            result = ai_service.ask("organizer", "crowd_analysis", {
+                "venue_name": venue.name,
+                "timestamp": snapshot.timestamp,
+                "total_attendance": str(snapshot.total_attendance),
+                "venue_capacity": str(snapshot.venue_capacity),
+                "occupancy_pct": str(snapshot.overall_occupancy_pct),
+                "zone_data": zone_text,
+                "bottleneck_zones": bottleneck_text,
+            })
+            analysis = result.data
+            from_cache = result.from_cache
+            fallback_used = result.fallback_used
+        except Exception:
+            logger.exception("Organizer crowd analysis AI fallback venue_id=%s", venue_id)
+            if snapshot.overall_occupancy_pct >= 90:
+                fallback_severity = "critical"
+            elif snapshot.overall_occupancy_pct >= 75:
+                fallback_severity = "high"
+            else:
+                fallback_severity = "moderate"
+            analysis = {
+                "summary": f"{venue.name} is at {snapshot.overall_occupancy_pct}% occupancy with live crowd decision support enabled.",
+                "severity": fallback_severity,
+                "critical_zones": snapshot.bottleneck_zones[:2],
+                "recommendations": decision_support["navigation_advice"][:3],
+                "prediction": "Monitor bottlenecks and adjust flow guidance in real time.",
+                "alert_message": None,
+            }
+            from_cache = False
+            fallback_used = True
 
         return {
             "venue_name": venue.name,
-            "analysis": result.data,
+            "analysis": analysis,
             "ai_powered": True,
-            "from_cache": result.from_cache,
-            "fallback_used": result.fallback_used,
+            "from_cache": from_cache,
+            "fallback_used": fallback_used,
+            "decision_support": decision_support,
         }
 
     def generate_event_briefing(self, venue_id: str) -> Dict:
         """Generate an AI operational briefing for a venue."""
         venue = self.venues.find_by_id(venue_id)
         if not venue:
+            logger.warning("Event briefing requested for missing venue_id=%s", venue_id)
             return {"error": "Venue not found"}
 
         snapshot = self.crowds.find_latest_by_venue(venue_id)
@@ -141,6 +202,7 @@ class OrganizerService:
         volunteers = self.volunteers.find_where(lambda v: v.venue_id == venue_id)
         matches = self.matches.find_where(lambda m: m.venue_id == venue_id)
         live_match = next((m for m in matches if m.status == "live"), None)
+        decision_support = self._build_decision_support(venue_id)
 
         match_summary = f"{live_match.home_team.name} vs {live_match.away_team.name} (LIVE)" if live_match else "No live match"
         crowd_summary = f"Attendance: {snapshot.total_attendance:,}/{snapshot.venue_capacity:,} ({snapshot.overall_occupancy_pct}%)" if snapshot else "N/A"
@@ -150,27 +212,52 @@ class OrganizerService:
         ) or "No active incidents"
         vol_summary = f"{len(volunteers)} deployed, {sum(1 for v in volunteers if v.status == 'available')} available"
 
-        result = ai_service.ask("organizer", "event_briefing", {
-            "venue_name": venue.name,
-            "city": venue.city,
-            "country": venue.country,
-            "event_date": utcnow_iso()[:10],
-            "match_summary": match_summary,
-            "total_attendance": str(snapshot.total_attendance if snapshot else 0),
-            "venue_capacity": str(venue.capacity),
-            "occupancy_pct": str(snapshot.overall_occupancy_pct if snapshot else 0),
-            "crowd_summary": crowd_summary,
-            "incident_count": str(len(active_incidents)),
-            "incident_summary": incident_summary,
-            "volunteer_summary": vol_summary,
-        })
+        try:
+            result = ai_service.ask("organizer", "event_briefing", {
+                "venue_name": venue.name,
+                "city": venue.city,
+                "country": venue.country,
+                "event_date": utcnow_iso()[:10],
+                "match_summary": match_summary,
+                "total_attendance": str(snapshot.total_attendance if snapshot else 0),
+                "venue_capacity": str(venue.capacity),
+                "occupancy_pct": str(snapshot.overall_occupancy_pct if snapshot else 0),
+                "crowd_summary": crowd_summary,
+                "incident_count": str(len(active_incidents)),
+                "incident_summary": incident_summary,
+                "volunteer_summary": vol_summary,
+            })
+            briefing = result.data
+            from_cache = result.from_cache
+            fallback_used = result.fallback_used
+        except Exception:
+            logger.exception("Organizer briefing AI fallback venue_id=%s", venue_id)
+            briefing = {
+                "title": f"Operational Briefing — {venue.name}",
+                "summary": (
+                    f"{venue.name} is operational with {len(active_incidents)} active incidents and "
+                    f"decision support active for the current venue state."
+                ),
+                "key_points": [
+                    crowd_summary,
+                    f"Active incidents: {len(active_incidents)}",
+                    f"Volunteers: {vol_summary}",
+                ],
+                "priorities": decision_support["crowd_avoidance"][:3],
+                "action_items": decision_support["navigation_advice"][:3],
+                "positive_indicators": ["Live decision support available"],
+                "overall_status": "yellow",
+            }
+            from_cache = False
+            fallback_used = True
 
         return {
             "venue_name": venue.name,
-            "briefing": result.data,
+            "briefing": briefing,
             "ai_powered": True,
-            "from_cache": result.from_cache,
-            "fallback_used": result.fallback_used,
+            "from_cache": from_cache,
+            "fallback_used": fallback_used,
+            "decision_support": decision_support,
         }
 
     def broadcast_alert(self, title: str, message: str, priority: str, venue_id: str) -> Dict:

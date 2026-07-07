@@ -2,11 +2,12 @@
 import logging
 from typing import Dict, List, Optional
 
+from app.ai.decision_engine import DecisionEngine
+from app.ai import ai_service
 from app.repositories.incident_repo import IncidentRepository
 from app.repositories.crowd_repo import CrowdRepository
 from app.repositories.venue_repo import VenueRepository
 from app.utils.datetime_utils import utcnow_iso
-from app.ai import ai_service
 
 logger = logging.getLogger(__name__)
 
@@ -79,10 +80,44 @@ PROTOCOLS = {
 
 
 class SecurityService:
+    """Security command-centre business logic for incidents and protocols."""
+
     def __init__(self, data_dir: str = "data"):
+        """Initialise repositories and the decision engine."""
         self.incidents = IncidentRepository(data_dir)
         self.crowds = CrowdRepository(data_dir)
         self.venues = VenueRepository(data_dir)
+        self.decision_engine = DecisionEngine(data_dir)
+
+    def _build_decision_support(self, venue_id: str) -> Dict:
+        """Build a JSON-serializable decision support payload for security."""
+        try:
+            context = self.decision_engine.build_context(
+                user_role="security",
+                venue_id=venue_id,
+                accessibility_needs=["emergency_response"],
+            )
+            decision = self.decision_engine.decide(context)
+            logger.info(
+                "Decision support built for security service venue_id=%s best_gate=%s",
+                venue_id,
+                decision["best_gate"],
+            )
+            return decision
+        except Exception as exc:
+            logger.exception(
+                "Decision support fallback for security service venue_id=%s",
+                venue_id,
+            )
+            return {
+                "best_gate": "Main gate",
+                "navigation_advice": ["Keep emergency access routes clear."],
+                "crowd_avoidance": ["Avoid congested zones until the area is secured."],
+                "emergency_actions": ["Escalate to security and medical response teams now."],
+                "accessibility_recommendations": ["Preserve accessible evacuation routes."],
+                "transportation_suggestion": "Use venue-managed routes and follow command-centre instructions.",
+                "error": str(exc),
+            }
 
     def get_all_incidents(self, venue_id: str = None) -> List[Dict]:
         """Return all incidents, optionally filtered by venue."""
@@ -130,7 +165,12 @@ class SecurityService:
             "notes": [],
         }
         self.incidents.save(incident_data)
-        logger.info("New incident logged: %s in %s", incident_data["id"], zone_name)
+        logger.info(
+            "New incident logged incident_id=%s zone_name=%s venue_id=%s",
+            incident_data["id"],
+            zone_name,
+            venue_id,
+        )
         return {
             "id": incident_data["id"],
             "status": "open",
@@ -150,35 +190,70 @@ class SecurityService:
         """Use AI to classify an incident and generate response recommendation."""
         incident = self.incidents.find_by_id(incident_id)
         if not incident:
+            logger.warning("Incident classification requested for missing incident_id=%s", incident_id)
             return {"error": "Incident not found"}
 
         venue = self.venues.find_by_id(incident.venue_id)
         venue_name = venue.name if venue else incident.venue_id
+        decision_support = self._build_decision_support(incident.venue_id)
 
-        result = ai_service.ask("security", "incident_classify", {
-            "venue_name": venue_name,
-            "zone_name": incident.zone_name,
-            "reported_at": incident.reported_at,
-            "user_input": incident.description,
-        })
+        protocol = self.get_protocol(incident.type.value)
+        protocol_steps = protocol.get("steps", [])
+        protocol_resources = protocol.get("resources", [])
 
-        classification = result.data.get("type", "unclassified")
-        recommendation = result.data.get("recommendation", "")
-        severity = result.data.get("severity", incident.severity.value)
+        try:
+            result = ai_service.ask("security", "incident_classify", {
+                "venue_name": venue_name,
+                "zone_name": incident.zone_name,
+                "reported_at": incident.reported_at,
+                "user_input": incident.description,
+            })
 
-        # Persist AI classification back to incident
+            classification = result.data.get("type", incident.type.value)
+            recommendation = result.data.get("recommendation", decision_support["emergency_actions"][0])
+            severity = result.data.get("severity", incident.severity.value)
+            steps = result.data.get("steps", []) or protocol_steps
+            resources = result.data.get("resources_required", protocol_resources)
+            fallback_used = result.fallback_used
+        except Exception:
+            logger.exception(
+                "AI incident classification fallback incident_id=%s venue_id=%s",
+                incident_id,
+                incident.venue_id,
+            )
+            classification = incident.type.value
+            severity = incident.severity.value
+            recommendation = decision_support["emergency_actions"][0]
+            steps = decision_support["emergency_actions"] + decision_support["crowd_avoidance"]
+            resources = protocol_resources
+            fallback_used = True
+            result = None
+
+            if classification == "unclassified":
+                recommendation = decision_support["emergency_actions"][0]
+
+        # Persist incident assessment back to the record.
         self.incidents.update(incident_id, {
             "ai_classification": f"{classification.upper()} — {severity.upper()} severity. {recommendation[:200]}",
-            "ai_recommendation": "\n".join(result.data.get("steps", [])),
+            "ai_recommendation": "\n".join(steps),
             "type": classification,
             "severity": severity,
         })
 
         return {
             "incident_id": incident_id,
-            "classification": result.data,
+            "classification": {
+                "type": classification,
+                "severity": severity,
+                "confidence": getattr(result, "data", {}).get("confidence", "medium") if result else "medium",
+                "recommendation": recommendation,
+                "steps": steps,
+                "resources_required": resources,
+                "estimated_resolution_minutes": getattr(result, "data", {}).get("estimated_resolution_minutes", 20) if result else 20,
+            },
             "ai_powered": True,
-            "fallback_used": result.fallback_used,
+            "fallback_used": fallback_used,
+            "decision_support": decision_support,
         }
 
     def get_zone_heatmap(self, venue_id: str) -> Dict:
