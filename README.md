@@ -382,7 +382,7 @@ FLASK_DEBUG=true python run.py
 
 ## Live Demo
 
-https://stadiumind-ai.onrender.com
+https://stadiumind-ai-1.onrender.com
 
 ---
 
