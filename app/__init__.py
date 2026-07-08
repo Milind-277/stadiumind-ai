@@ -4,6 +4,7 @@ app/__init__.py — Flask Application Factory.
 Creates and configures the Flask app. Registers all blueprints,
 middleware, error handlers, and security headers.
 """
+
 import logging
 import os
 
@@ -50,7 +51,9 @@ def create_app(config_class=Config) -> Flask:
         return response
 
     # ── Register Blueprints ────────────────────────────────────────────────────
-    from app.blueprints import core_bp, fan_bp, organizer_bp, volunteer_bp, security_bp
+    from app.blueprints import (core_bp, fan_bp, organizer_bp, security_bp,
+                                volunteer_bp)
+
     app.register_blueprint(core_bp)
     app.register_blueprint(fan_bp)
     app.register_blueprint(organizer_bp)
@@ -60,19 +63,24 @@ def create_app(config_class=Config) -> Flask:
     # ── Register Middleware ────────────────────────────────────────────────────
     from app.middleware.error_handler import register_error_handlers
     from app.middleware.request_logger import register_request_logger
+
     register_error_handlers(app)
     register_request_logger(app)
 
     # ── Jinja2 Global Helpers ──────────────────────────────────────────────────
     from app.utils.datetime_utils import format_match_time, time_until
+
     app.jinja_env.globals.update(
         format_match_time=format_match_time,
         time_until=time_until,
     )
 
     logger = logging.getLogger(__name__)
-    logger.info("StadiumMind AI application started (debug=%s, mock_ai=%s)",
-                config_class.DEBUG, config_class.MOCK_AI)
+    logger.info(
+        "StadiumMind AI application started (debug=%s, mock_ai=%s)",
+        config_class.DEBUG,
+        config_class.MOCK_AI,
+    )
 
     return app
 

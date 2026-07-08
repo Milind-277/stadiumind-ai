@@ -1,4 +1,5 @@
 """app/models/match.py — Match and Team domain models."""
+
 from dataclasses import dataclass
 from typing import Optional
 
@@ -7,7 +8,7 @@ from typing import Optional
 class Team:
     id: str
     name: str
-    code: str          # 3-letter FIFA code e.g. "BRA"
+    code: str  # 3-letter FIFA code e.g. "BRA"
     flag_emoji: str
     group: str
 
@@ -19,10 +20,10 @@ class Match:
     away_team: Team
     venue_id: str
     venue_name: str
-    kickoff_utc: str   # ISO 8601
-    stage: str         # "Group Stage", "Quarter-Final", etc.
+    kickoff_utc: str  # ISO 8601
+    stage: str  # "Group Stage", "Quarter-Final", etc.
     group: Optional[str]
-    status: str        # "scheduled" | "live" | "completed"
+    status: str  # "scheduled" | "live" | "completed"
     home_score: Optional[int] = None
     away_score: Optional[int] = None
     attendance: Optional[int] = None

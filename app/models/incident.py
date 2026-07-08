@@ -1,7 +1,8 @@
 """app/models/incident.py — Security incident domain models."""
+
 from dataclasses import dataclass, field
-from typing import Optional, List
 from enum import Enum
+from typing import List, Optional
 
 
 class IncidentType(str, Enum):
@@ -40,8 +41,8 @@ class Incident:
     severity: SeverityLevel
     status: IncidentStatus
     description: str
-    reported_by: str       # volunteer_id or "system"
-    reported_at: str       # ISO 8601
+    reported_by: str  # volunteer_id or "system"
+    reported_at: str  # ISO 8601
     assigned_to: Optional[str] = None
     resolved_at: Optional[str] = None
     ai_classification: Optional[str] = None

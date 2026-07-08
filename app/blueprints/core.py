@@ -1,5 +1,8 @@
 """app/blueprints/core.py — Landing page and role selection."""
-from flask import Blueprint, render_template, redirect, url_for, session, request, jsonify
+
+from flask import (Blueprint, jsonify, redirect, render_template, request,
+                   session, url_for)
+
 from app.middleware.role_guard import VALID_ROLES
 
 bp = Blueprint("core", __name__)

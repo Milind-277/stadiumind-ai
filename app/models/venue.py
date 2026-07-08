@@ -1,4 +1,5 @@
 """app/models/venue.py — Venue, Zone, and Gate domain models."""
+
 from dataclasses import dataclass
 from typing import List
 
@@ -7,18 +8,18 @@ from typing import List
 class Gate:
     id: str
     name: str
-    location: str      # e.g. "North", "South", "East", "West"
+    location: str  # e.g. "North", "South", "East", "West"
     accessible: bool
-    open_time: str     # "HH:MM"
+    open_time: str  # "HH:MM"
 
 
 @dataclass
 class Zone:
     id: str
     name: str
-    type: str          # "seating" | "concourse" | "food" | "medical" | "exit"
+    type: str  # "seating" | "concourse" | "food" | "medical" | "exit"
     capacity: int
-    level: int         # Floor level (0 = ground)
+    level: int  # Floor level (0 = ground)
     accessible: bool
 
 

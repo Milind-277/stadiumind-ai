@@ -1,7 +1,10 @@
 """app/repositories/volunteer_repo.py — JSON-backed Volunteer and Task repositories."""
+
 from typing import Any, Dict, List
 
-from app.models.volunteer import Volunteer, Task, Shift, TaskStatus, TaskPriority
+from app.models.volunteer import (Shift, Task, TaskPriority, TaskStatus,
+                                  Volunteer)
+
 from .json_base import JSONRepository
 
 
@@ -14,9 +17,12 @@ class VolunteerRepository(JSONRepository):
         if raw.get("shift"):
             s = raw["shift"]
             shift = Shift(
-                id=s["id"], volunteer_id=s["volunteer_id"],
-                venue_id=s["venue_id"], zone_id=s["zone_id"],
-                start_time=s["start_time"], end_time=s["end_time"],
+                id=s["id"],
+                volunteer_id=s["volunteer_id"],
+                venue_id=s["venue_id"],
+                zone_id=s["zone_id"],
+                start_time=s["start_time"],
+                end_time=s["end_time"],
                 role=s["role"],
             )
         return Volunteer(

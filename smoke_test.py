@@ -1,9 +1,10 @@
 """Smoke tests for StadiumMind AI — verifies all routes render correctly."""
-import json
-import sys
 
+import json
 # Bootstrap MOCK_AI before importing the app
 import os
+import sys
+
 os.environ["MOCK_AI"] = "true"
 os.environ["FLASK_DEBUG"] = "false"
 os.environ["SECRET_KEY"] = "smoke-test-secret-key-not-for-production"
@@ -49,10 +50,10 @@ print("Role selection")
 print("-" * 40)
 for role in ("fan", "organizer", "volunteer", "security"):
     r = client.post("/select-role", data={"role": role}, follow_redirects=False)
-    check(f"POST /select-role → {role}", r, 302)
+    check(f"POST /select-role -> {role}", r, 302)
 
 r = client.post("/select-role", data={"role": "hacker"}, follow_redirects=False)
-check("POST /select-role → invalid role (400)", r, 400)
+check("POST /select-role -> invalid role (400)", r, 400)
 
 # ── Fan pages ──────────────────────────────────────────────────────
 print()
@@ -70,7 +71,11 @@ check("GET /fan/chat", client.get("/fan/chat"), content_check="Fan chat")
 print()
 print("Fan API")
 print("-" * 40)
-check("GET /fan/api/fan/matches", client.get("/fan/api/fan/matches"), content_check="matches")
+check(
+    "GET /fan/api/fan/matches",
+    client.get("/fan/api/fan/matches"),
+    content_check="matches",
+)
 
 r = client.post(
     "/fan/api/fan/chat",
@@ -83,7 +88,7 @@ r = client.get("/fan/api/fan/wayfinding?venue_id=v001&to=Gate+A")
 check("GET /fan/api/fan/wayfinding", r, content_check="best_gate")
 
 r = client.get("/fan/api/fan/venue/v001")
-check("GET /fan/api/fan/venue/v001", r, content_check="venue")
+check("GET /fan/api/fan/venue/v001", r, content_check="MetLife")
 
 # ── Organizer pages ────────────────────────────────────────────────
 print()
@@ -94,7 +99,9 @@ with client.session_transaction() as sess:
 
 check("GET /organizer/", client.get("/organizer/"), content_check="Organizer")
 check("GET /organizer/crowd", client.get("/organizer/crowd"), content_check="Crowd")
-check("GET /organizer/reports", client.get("/organizer/reports"), content_check="Reports")
+check(
+    "GET /organizer/reports", client.get("/organizer/reports"), content_check="Reports"
+)
 
 # ── Organizer API ──────────────────────────────────────────────────
 print()
@@ -112,7 +119,14 @@ check("POST /organizer/api/organizer/reports/generate", r)
 
 r = client.post(
     "/organizer/api/organizer/alerts/broadcast",
-    data=json.dumps({"title": "Test", "message": "Test msg", "priority": "medium", "venue_id": "v001"}),
+    data=json.dumps(
+        {
+            "title": "Test",
+            "message": "Test msg",
+            "priority": "medium",
+            "venue_id": "v001",
+        }
+    ),
     content_type="application/json",
 )
 check("POST /organizer/api/organizer/alerts/broadcast", r)
@@ -149,7 +163,11 @@ with client.session_transaction() as sess:
     sess["role"] = "security"
 
 check("GET /security/", client.get("/security/"), content_check="Security")
-check("GET /security/incidents", client.get("/security/incidents"), content_check="Incident")
+check(
+    "GET /security/incidents",
+    client.get("/security/incidents"),
+    content_check="Incident",
+)
 
 # ── Security API ───────────────────────────────────────────────────
 print()
@@ -158,8 +176,8 @@ print("-" * 40)
 r = client.get("/security/api/security/incidents")
 check("GET /security/api/security/incidents", r, content_check="incidents")
 
-r = client.post("/security/api/security/incidents/i001/classify")
-check("POST /security/api/security/incidents/i001/classify", r)
+r = client.post("/security/api/security/incidents/inc001/classify")
+check("POST /security/api/security/incidents/inc001/classify", r)
 
 # ── Role guard enforcement ─────────────────────────────────────────
 print()
@@ -169,16 +187,16 @@ with client.session_transaction() as sess:
     sess.clear()
 
 r = client.get("/fan/", follow_redirects=False)
-check("GET /fan/ without session → 302", r, 302)
+check("GET /fan/ without session -> 302", r, 302)
 
 r = client.get("/organizer/", follow_redirects=False)
-check("GET /organizer/ without session → 302", r, 302)
+check("GET /organizer/ without session -> 302", r, 302)
 
 r = client.get("/volunteer/", follow_redirects=False)
-check("GET /volunteer/ without session → 302", r, 302)
+check("GET /volunteer/ without session -> 302", r, 302)
 
 r = client.get("/security/", follow_redirects=False)
-check("GET /security/ without session → 302", r, 302)
+check("GET /security/ without session -> 302", r, 302)
 
 # ── Wrong role cross-access ────────────────────────────────────────
 print()
@@ -188,16 +206,18 @@ with client.session_transaction() as sess:
     sess["role"] = "fan"
 
 r = client.get("/security/", follow_redirects=False)
-check("Fan accessing /security/ → 302 (role guard)", r, 302)
+check("Fan accessing /security/ -> 302 (role guard)", r, 302)
 
 r = client.get("/organizer/", follow_redirects=False)
-check("Fan accessing /organizer/ → 302 (role guard)", r, 302)
+check("Fan accessing /organizer/ -> 302 (role guard)", r, 302)
 
 # ── Switch role ────────────────────────────────────────────────────
 print()
 print("Switch role")
 print("-" * 40)
-check("GET /switch-role → 302", client.get("/switch-role", follow_redirects=False), 302)
+check(
+    "GET /switch-role -> 302", client.get("/switch-role", follow_redirects=False), 302
+)
 
 # ── Summary ────────────────────────────────────────────────────────
 print()

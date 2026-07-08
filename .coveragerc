@@ -1,0 +1,26 @@
+[run]
+source = app
+omit =
+    app/__pycache__/*
+    app/**/__pycache__/*
+    .venv/*
+    .venv-1/*
+    tests/*
+
+[report]
+precision = 1
+show_missing = true
+skip_covered = false
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    pass
+    \.\.\.$
+
+[html]
+directory = htmlcov
+
+[xml]
+output = coverage.xml

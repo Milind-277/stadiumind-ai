@@ -4,6 +4,7 @@ app/repositories/json_base.py — Base class for all JSON-backed repositories.
 Handles atomic file reads and writes. All JSON repos extend this class.
 Atomic write: write to temp file → rename (prevents partial reads on crash).
 """
+
 import json
 import os
 import tempfile
@@ -19,8 +20,8 @@ class JSONRepository(BaseRepository):
     Subclasses must set `self.file_path` and implement `_to_model()`.
     """
 
-    file_path: str = ""        # Set by subclass (e.g. "data/matches.json")
-    id_field: str = "id"       # Primary key field name in JSON
+    file_path: str = ""  # Set by subclass (e.g. "data/matches.json")
+    id_field: str = "id"  # Primary key field name in JSON
 
     def __init__(self, data_dir: str = "data") -> None:
         self.data_dir = data_dir
@@ -41,6 +42,7 @@ class JSONRepository(BaseRepository):
             return record
         if hasattr(record, "__dataclass_fields__"):
             import dataclasses
+
             return dataclasses.asdict(record)
         return vars(record)
 

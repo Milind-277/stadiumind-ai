@@ -8,6 +8,7 @@ Features:
 - API key read from config (never hardcoded)
 - Raises GeminiAPIError on exhausted retries
 """
+
 import json
 import logging
 import time
@@ -26,7 +27,9 @@ class GeminiClient:
     MAX_RETRIES = 2
     RETRY_DELAY = 1.5  # seconds, doubles each retry
 
-    def __init__(self, api_key: str, model: str = "gemini-1.5-flash", max_tokens: int = 1024):
+    def __init__(
+        self, api_key: str, model: str = "gemini-1.5-flash", max_tokens: int = 1024
+    ):
         self.api_key = api_key
         self.model_name = model
         self.max_tokens = max_tokens
@@ -39,6 +42,7 @@ class GeminiClient:
             return
         try:
             import google.generativeai as genai
+
             genai.configure(api_key=self.api_key)
             self._model = genai.GenerativeModel(
                 model_name=self.model_name,
@@ -78,7 +82,9 @@ class GeminiClient:
                 logger.debug("Gemini call success, attempt %d", attempt + 1)
                 return parsed
             except json.JSONDecodeError as exc:
-                logger.warning("Gemini returned non-JSON output on attempt %d", attempt + 1)
+                logger.warning(
+                    "Gemini returned non-JSON output on attempt %d", attempt + 1
+                )
                 raise GeminiAPIError("Gemini returned non-JSON output.") from exc
             except Exception as exc:
                 err_str = str(exc)
@@ -89,6 +95,8 @@ class GeminiClient:
                     time.sleep(delay)
                     delay *= 2
                 else:
-                    raise GeminiAPIError(f"Gemini API failed after {self.MAX_RETRIES + 1} attempts.") from exc
+                    raise GeminiAPIError(
+                        f"Gemini API failed after {self.MAX_RETRIES + 1} attempts."
+                    ) from exc
 
         raise GeminiAPIError("Gemini API failed — exhausted retries.")

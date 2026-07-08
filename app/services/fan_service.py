@@ -1,12 +1,13 @@
 """app/services/fan_service.py — Business logic for the Fan persona."""
+
 import logging
 from typing import Dict, List, Optional
 
-from app.ai.decision_engine import DecisionEngine
 from app.ai import ai_service
+from app.ai.decision_engine import DecisionEngine
+from app.repositories.crowd_repo import CrowdRepository
 from app.repositories.match_repo import MatchRepository
 from app.repositories.venue_repo import VenueRepository
-from app.repositories.crowd_repo import CrowdRepository
 from app.utils.datetime_utils import format_match_time, time_until
 
 logger = logging.getLogger(__name__)
@@ -29,52 +30,43 @@ class FanService:
         language: str = "English",
     ) -> Dict:
         """Build a JSON-serializable decision support payload for fans."""
-        try:
-            context = self.decision_engine.build_context(
-                user_role="fan",
-                venue_id=venue_id,
-                accessibility_needs=accessibility_needs or [],
-                language=language,
-            )
-            decision = self.decision_engine.decide(context)
-            logger.info(
-                "Decision support built for fan service venue_id=%s best_gate=%s",
-                venue_id,
-                decision["best_gate"],
-            )
-            return decision
-        except Exception as exc:
-            logger.exception("Decision support fallback for fan service venue_id=%s", venue_id)
-            return {
-                "best_gate": "Main gate",
-                "navigation_advice": ["Follow on-site signage and staff directions."],
-                "crowd_avoidance": ["Avoid the busiest concourses during peak movement."],
-                "emergency_actions": ["No immediate emergency action required."],
-                "accessibility_recommendations": ["Request help from venue staff if needed."],
-                "transportation_suggestion": "Use public transit or the venue's nearest transport option.",
-                "error": str(exc),
-            }
+        return self.decision_engine.safe_decide(
+            user_role="fan",
+            venue_id=venue_id,
+            accessibility_needs=accessibility_needs,
+            language=language,
+        )
 
     def get_all_matches(self) -> List[Dict]:
         """Return all matches with formatted times and status."""
         result = []
         for m in self.matches.find_all():
-            result.append({
-                "id": m.id,
-                "home_team": {"name": m.home_team.name, "code": m.home_team.code, "flag": m.home_team.flag_emoji},
-                "away_team": {"name": m.away_team.name, "code": m.away_team.code, "flag": m.away_team.flag_emoji},
-                "venue_id": m.venue_id,
-                "venue_name": m.venue_name,
-                "kickoff_display": format_match_time(m.kickoff_utc),
-                "time_until": time_until(m.kickoff_utc),
-                "stage": m.stage,
-                "group": m.group,
-                "status": m.status,
-                "score": m.score_display,
-                "is_live": m.is_live,
-                "attendance": m.attendance,
-                "highlights": m.highlights,
-            })
+            result.append(
+                {
+                    "id": m.id,
+                    "home_team": {
+                        "name": m.home_team.name,
+                        "code": m.home_team.code,
+                        "flag": m.home_team.flag_emoji,
+                    },
+                    "away_team": {
+                        "name": m.away_team.name,
+                        "code": m.away_team.code,
+                        "flag": m.away_team.flag_emoji,
+                    },
+                    "venue_id": m.venue_id,
+                    "venue_name": m.venue_name,
+                    "kickoff_display": format_match_time(m.kickoff_utc),
+                    "time_until": time_until(m.kickoff_utc),
+                    "stage": m.stage,
+                    "group": m.group,
+                    "status": m.status,
+                    "score": m.score_display,
+                    "is_live": m.is_live,
+                    "attendance": m.attendance,
+                    "highlights": m.highlights,
+                }
+            )
         return result
 
     def get_match_detail(self, match_id: str) -> Optional[Dict]:
@@ -85,14 +77,28 @@ class FanService:
         venue = self.venues.find_by_id(m.venue_id)
         return {
             "id": m.id,
-            "home_team": {"name": m.home_team.name, "code": m.home_team.code, "flag": m.home_team.flag_emoji, "group": m.home_team.group},
-            "away_team": {"name": m.away_team.name, "code": m.away_team.code, "flag": m.away_team.flag_emoji, "group": m.away_team.group},
-            "venue": {
-                "name": venue.name if venue else m.venue_name,
-                "city": venue.city if venue else "",
-                "country": venue.country if venue else "",
-                "nearest_transit": venue.nearest_transit if venue else "",
-            } if venue else {"name": m.venue_name},
+            "home_team": {
+                "name": m.home_team.name,
+                "code": m.home_team.code,
+                "flag": m.home_team.flag_emoji,
+                "group": m.home_team.group,
+            },
+            "away_team": {
+                "name": m.away_team.name,
+                "code": m.away_team.code,
+                "flag": m.away_team.flag_emoji,
+                "group": m.away_team.group,
+            },
+            "venue": (
+                {
+                    "name": venue.name if venue else m.venue_name,
+                    "city": venue.city if venue else "",
+                    "country": venue.country if venue else "",
+                    "nearest_transit": venue.nearest_transit if venue else "",
+                }
+                if venue
+                else {"name": m.venue_name}
+            ),
             "kickoff_display": format_match_time(m.kickoff_utc),
             "stage": m.stage,
             "group": m.group,
@@ -124,7 +130,8 @@ class FanService:
                 + decision_support["crowd_avoidance"]
                 + decision_support["accessibility_recommendations"]
             )[:5],
-            "urgent": decision_support["emergency_actions"] != ["No immediate emergency action required."],
+            "urgent": decision_support["emergency_actions"]
+            != ["No immediate emergency action required."],
             "decision_support": decision_support,
         }
 
@@ -134,7 +141,10 @@ class FanService:
             "ai_guidance": ai_guidance,
             "ai_powered": True,
             "fallback_used": False,
-            "gates": [{"name": g.name, "location": g.location, "accessible": g.accessible} for g in venue.gates],
+            "gates": [
+                {"name": g.name, "location": g.location, "accessible": g.accessible}
+                for g in venue.gates
+            ],
             "accessibility_services": venue.accessibility_services,
             "decision_support": decision_support,
         }
@@ -153,10 +163,20 @@ class FanService:
             "capacity": venue.capacity,
             "nearest_transit": venue.nearest_transit,
             "accessibility_services": venue.accessibility_services,
-            "gates": [{"id": g.id, "name": g.name, "location": g.location, "accessible": g.accessible, "open_time": g.open_time} for g in venue.gates],
+            "gates": [
+                {
+                    "id": g.id,
+                    "name": g.name,
+                    "location": g.location,
+                    "accessible": g.accessible,
+                    "open_time": g.open_time,
+                }
+                for g in venue.gates
+            ],
             "food_courts": [
                 {
-                    "id": f.id, "name": f.name,
+                    "id": f.id,
+                    "name": f.name,
                     "cuisine_types": f.cuisine_types,
                     "halal": f.halal_available,
                     "vegetarian": f.vegetarian_available,
@@ -199,11 +219,15 @@ class FanService:
             decision_support = self._build_decision_support(venue_id=venue_id)
 
         try:
-            result = ai_service.ask("fan", "fan_chat", {
-                "venue_context": venue_ctx,
-                "match_context": match_ctx,
-                "user_input": message,
-            })
+            result = ai_service.ask(
+                "fan",
+                "fan_chat",
+                {
+                    "venue_context": venue_ctx,
+                    "match_context": match_ctx,
+                    "user_input": message,
+                },
+            )
             result_data = result.data
             from_cache = result.from_cache
             fallback_used = result.fallback_used
@@ -218,7 +242,8 @@ class FanService:
                     decision_support["navigation_advice"]
                     + decision_support["crowd_avoidance"]
                 )[:3],
-                "urgent": decision_support["emergency_actions"] != ["No immediate emergency action required."],
+                "urgent": decision_support["emergency_actions"]
+                != ["No immediate emergency action required."],
             }
             from_cache = False
             fallback_used = True

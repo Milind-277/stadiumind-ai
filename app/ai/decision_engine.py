@@ -3,6 +3,7 @@
 Builds a structured context from JSON-backed repositories, generates a
 Gemini-ready prompt, and produces deterministic operational recommendations.
 """
+
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, Optional
 
@@ -12,6 +13,7 @@ from app.repositories.crowd_repo import CrowdRepository
 from app.repositories.incident_repo import IncidentRepository
 from app.repositories.match_repo import MatchRepository
 from app.repositories.venue_repo import VenueRepository
+
 
 @dataclass
 class DecisionContext:
@@ -317,6 +319,57 @@ class DecisionEngine:
         """Generate the Gemini prompt for the given context."""
         return self.prompt_builder.build(context)
 
+    def safe_decide(
+        self,
+        user_role: str,
+        venue_id: str,
+        accessibility_needs: Optional[List[str]] = None,
+        language: str = "English",
+        fallback_overrides: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Build context and decide, with a guaranteed fallback if it fails."""
+        try:
+            context = self.build_context(
+                user_role=user_role,
+                venue_id=venue_id,
+                accessibility_needs=accessibility_needs or [],
+                language=language,
+            )
+            decision = self.decide(context)
+            import logging
+
+            logging.getLogger(__name__).info(
+                "Decision support built for %s service venue_id=%s best_gate=%s",
+                user_role,
+                venue_id,
+                decision.get("best_gate"),
+            )
+            return decision
+        except Exception as exc:
+            import logging
+
+            logging.getLogger(__name__).exception(
+                "Decision support fallback for %s service venue_id=%s",
+                user_role,
+                venue_id,
+            )
+            fallback = {
+                "best_gate": "Main gate",
+                "navigation_advice": ["Follow on-site signage and staff directions."],
+                "crowd_avoidance": [
+                    "Avoid the busiest concourses during peak movement."
+                ],
+                "emergency_actions": ["No immediate emergency action required."],
+                "accessibility_recommendations": [
+                    "Request help from venue staff if needed."
+                ],
+                "transportation_suggestion": "Use public transit or the venue's nearest transport option.",
+                "error": str(exc),
+            }
+            if fallback_overrides:
+                fallback.update(fallback_overrides)
+            return fallback
+
     def decide(self, context: DecisionContext) -> Dict[str, Any]:
         """Return deterministic operational recommendations from context."""
         venue = context.venue
@@ -324,8 +377,12 @@ class DecisionEngine:
         emergency_status = context.emergency_status
         weather = context.weather
 
-        best_gate = self._select_best_gate(venue, context.accessibility_needs, crowd_status)
-        navigation_advice = self._build_navigation_advice(best_gate, crowd_status, weather)
+        best_gate = self._select_best_gate(
+            venue, context.accessibility_needs, crowd_status
+        )
+        navigation_advice = self._build_navigation_advice(
+            best_gate, crowd_status, weather
+        )
         crowd_avoidance = self._build_crowd_avoidance(crowd_status, venue)
         emergency_actions = self._build_emergency_actions(emergency_status)
         accessibility_recommendations = self._build_accessibility_recommendations(
@@ -333,7 +390,9 @@ class DecisionEngine:
             venue,
             best_gate,
         )
-        transportation_suggestion = self._build_transportation_suggestion(venue, weather)
+        transportation_suggestion = self._build_transportation_suggestion(
+            venue, weather
+        )
 
         return {
             "best_gate": best_gate,
@@ -388,7 +447,9 @@ class DecisionEngine:
         """Build step-by-step navigation advice."""
         advice = [f"Enter via {best_gate}."]
         if crowd_status.get("severity") in {"high", "critical"}:
-            advice.append("Follow staff directions and avoid the busiest concourse areas.")
+            advice.append(
+                "Follow staff directions and avoid the busiest concourse areas."
+            )
         if weather.get("condition") in {"light_rain", "rain", "storm"}:
             advice.append("Allow extra time for slower movement due to weather.")
         advice.append("Use indoor routes where possible to stay clear of congestion.")
@@ -428,14 +489,20 @@ class DecisionEngine:
         best_gate: str,
     ) -> List[str]:
         """Translate accessibility needs into practical guidance."""
-        recommendations = [f"Use {best_gate}, which is the preferred accessible entry point."]
+        recommendations = [
+            f"Use {best_gate}, which is the preferred accessible entry point."
+        ]
         if accessibility_needs:
             recommendations.append(
                 f"Ask staff for support related to: {', '.join(accessibility_needs[:3])}."
             )
-        recommendations.append("Keep a copy of venue accessibility services handy while moving.")
+        recommendations.append(
+            "Keep a copy of venue accessibility services handy while moving."
+        )
         if venue.get("accessibility_services"):
-            recommendations.append("Use the venue's accessibility services if assistance is needed.")
+            recommendations.append(
+                "Use the venue's accessibility services if assistance is needed."
+            )
         return recommendations[:4]
 
     def _build_transportation_suggestion(
@@ -446,7 +513,9 @@ class DecisionEngine:
         """Recommend a transport option using the venue and weather data."""
         transit = venue.get("nearest_transit") or "public transit"
         if weather.get("condition") in {"light_rain", "rain", "storm"}:
-            return f"Use {transit} and plan for extra walking time because of the weather."
+            return (
+                f"Use {transit} and plan for extra walking time because of the weather."
+            )
         return f"Use {transit} for the most direct and reliable arrival route."
 
 

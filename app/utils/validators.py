@@ -1,4 +1,5 @@
 """app/utils/validators.py — Input sanitisation and validation helpers."""
+
 import html
 import re
 from typing import Any, Optional
@@ -15,7 +16,7 @@ def sanitize_string(value: Any, max_length: int = 500) -> str:
 
 def is_valid_id(value: str) -> bool:
     """Validate a simple alphanumeric ID (letters, digits, underscores, hyphens)."""
-    return bool(re.match(r'^[a-zA-Z0-9_\-]{1,64}$', value))
+    return bool(re.match(r"^[a-zA-Z0-9_\-]{1,64}$", value))
 
 
 def require_fields(data: dict, *fields: str) -> Optional[str]:

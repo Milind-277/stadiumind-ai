@@ -1,4 +1,5 @@
 """app/middleware/request_logger.py — Structured request logging middleware."""
+
 import logging
 import time
 import uuid
@@ -18,7 +19,9 @@ def register_request_logger(app: Flask) -> None:
 
     @app.after_request
     def after_request(response):
-        duration_ms = round((time.monotonic() - g.get("start_time", time.monotonic())) * 1000, 1)
+        duration_ms = round(
+            (time.monotonic() - g.get("start_time", time.monotonic())) * 1000, 1
+        )
         # Inject request_id header for debugging
         response.headers["X-Request-ID"] = g.get("request_id", "-")
         logger.info(

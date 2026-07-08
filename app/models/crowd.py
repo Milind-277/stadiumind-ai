@@ -1,14 +1,15 @@
 """app/models/crowd.py — Crowd density and analytics domain models."""
+
 from dataclasses import dataclass
 from enum import Enum
 from typing import List
 
 
 class DensityLevel(str, Enum):
-    LOW = "low"           # < 40% capacity
-    MODERATE = "moderate" # 40–70%
-    HIGH = "high"         # 70–85%
-    CRITICAL = "critical" # > 85%
+    LOW = "low"  # < 40% capacity
+    MODERATE = "moderate"  # 40–70%
+    HIGH = "high"  # 70–85%
+    CRITICAL = "critical"  # > 85%
 
 
 @dataclass
@@ -18,7 +19,7 @@ class ZoneDensity:
     current_count: int
     capacity: int
     density_level: DensityLevel
-    timestamp: str         # ISO 8601
+    timestamp: str  # ISO 8601
 
     @property
     def occupancy_pct(self) -> float:
@@ -35,7 +36,7 @@ class CrowdSnapshot:
     total_attendance: int
     venue_capacity: int
     zones: List[ZoneDensity]
-    bottleneck_zones: List[str]    # zone_ids flagged as bottlenecks
+    bottleneck_zones: List[str]  # zone_ids flagged as bottlenecks
     alert_active: bool
 
     @property

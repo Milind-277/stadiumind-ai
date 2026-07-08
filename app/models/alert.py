@@ -1,4 +1,5 @@
 """app/models/alert.py — Alert and notification domain models."""
+
 from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
@@ -28,7 +29,7 @@ class Alert:
     target: AlertTarget
     venue_id: str
     zone_id: Optional[str]
-    created_at: str            # ISO 8601
-    created_by: str            # role that created the alert
+    created_at: str  # ISO 8601
+    created_by: str  # role that created the alert
     expires_at: Optional[str] = None
     acknowledged: bool = False

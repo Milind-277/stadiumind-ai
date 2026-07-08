@@ -11,14 +11,15 @@ Usage:
         "match_context": "...",
     })
 """
+
 import dataclasses
 import logging
 from typing import Any, Dict, Optional
 
-from app.config import Config
 from app.ai import cache, prompt_manager
-from app.ai.gemini_client import GeminiClient, GeminiAPIError
-from app.ai.response_parser import parse, AIOutputInvalidError
+from app.ai.gemini_client import GeminiAPIError, GeminiClient
+from app.ai.response_parser import AIOutputInvalidError, parse
+from app.config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +118,7 @@ FALLBACKS: Dict[str, Dict[str, Any]] = {
 @dataclasses.dataclass
 class AIResult:
     """Structured result returned by ai_service.ask()."""
+
     data: Dict[str, Any]
     intent: str
     from_cache: bool = False
@@ -178,6 +180,7 @@ def ask(persona: str, intent: str, context: Dict[str, Any]) -> AIResult:
 
 # ── Mock Responses (MOCK_AI=true) ─────────────────────────────────────────────
 
+
 def _mock_response(intent: str, context: Dict[str, Any]) -> Dict[str, Any]:
     """Return realistic-looking mock AI responses for demo/offline mode."""
     mock_map = {
@@ -216,7 +219,11 @@ def _mock_response(intent: str, context: Dict[str, Any]) -> Dict[str, Any]:
                 "Step 4: Issue PA announcement for crowd redirection",
                 "Step 5: Monitor zone density every 3 minutes and escalate if no improvement",
             ],
-            "resources_required": ["2x Crowd control officers", "Digital signage operator", "Zone supervisor"],
+            "resources_required": [
+                "2x Crowd control officers",
+                "Digital signage operator",
+                "Zone supervisor",
+            ],
             "estimated_resolution_minutes": 15,
         },
         "volunteer_guidance": {

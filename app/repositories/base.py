@@ -4,6 +4,7 @@ app/repositories/base.py — Abstract Repository Interface.
 All data access goes through this contract. Swap the concrete implementation
 (JSON → PostgreSQL → Firestore) without touching any service code.
 """
+
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List, Optional, TypeVar
 

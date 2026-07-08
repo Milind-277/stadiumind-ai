@@ -1,0 +1,134 @@
+[
+  {
+    "id": "v001",
+    "name": "MetLife Stadium",
+    "city": "East Rutherford",
+    "country": "USA",
+    "capacity": 82500,
+    "address": "1 MetLife Stadium Dr, East Rutherford, NJ 07073",
+    "latitude": 40.8135,
+    "longitude": -74.0745,
+    "nearest_transit": "NJ Transit — Meadowlands Station (10 min walk)",
+    "parking_zones": ["P1-North", "P2-South", "P3-East", "P4-West", "P5-VIP"],
+    "accessibility_services": [
+      "Wheelchair-accessible seating in all zones",
+      "Hearing loop system in main concourse",
+      "Dedicated accessible parking (P5-VIP)",
+      "Companion care restrooms on all levels",
+      "Braille stadium maps available at Gate A",
+      "Sign language interpreters at information booths"
+    ],
+    "gates": [
+      {"id": "g01", "name": "Gate A", "location": "North", "accessible": true, "open_time": "16:00"},
+      {"id": "g02", "name": "Gate B", "location": "South", "accessible": true, "open_time": "16:00"},
+      {"id": "g03", "name": "Gate C", "location": "East", "accessible": false, "open_time": "16:30"},
+      {"id": "g04", "name": "Gate D", "location": "West", "accessible": true, "open_time": "16:00"},
+      {"id": "g05", "name": "Gate VIP", "location": "North-West", "accessible": true, "open_time": "15:00"}
+    ],
+    "zones": [
+      {"id": "z01", "name": "North Concourse", "type": "concourse", "capacity": 8000, "level": 1, "accessible": true},
+      {"id": "z02", "name": "South Concourse", "type": "concourse", "capacity": 8000, "level": 1, "accessible": true},
+      {"id": "z03", "name": "Lower Bowl", "type": "seating", "capacity": 40000, "level": 0, "accessible": true},
+      {"id": "z04", "name": "Upper Deck", "type": "seating", "capacity": 30000, "level": 2, "accessible": false},
+      {"id": "z05", "name": "VIP Lounge", "type": "seating", "capacity": 2000, "level": 1, "accessible": true},
+      {"id": "z06", "name": "Food Court East", "type": "food", "capacity": 1500, "level": 1, "accessible": true},
+      {"id": "z07", "name": "Food Court West", "type": "food", "capacity": 1500, "level": 1, "accessible": true},
+      {"id": "z08", "name": "Medical Bay A", "type": "medical", "capacity": 50, "level": 0, "accessible": true},
+      {"id": "z09", "name": "Exit Corridor North", "type": "exit", "capacity": 5000, "level": 0, "accessible": true},
+      {"id": "z10", "name": "Exit Corridor South", "type": "exit", "capacity": 5000, "level": 0, "accessible": true}
+    ],
+    "food_courts": [
+      {
+        "id": "fc01", "name": "Global Bites East", "zone_id": "z06",
+        "cuisine_types": ["American", "Mexican", "Brazilian", "Indian"],
+        "halal_available": true, "vegetarian_available": true, "wait_time_minutes": 8
+      },
+      {
+        "id": "fc02", "name": "Stadium Eats West", "zone_id": "z07",
+        "cuisine_types": ["American", "Italian", "Korean"],
+        "halal_available": false, "vegetarian_available": true, "wait_time_minutes": 12
+      }
+    ]
+  },
+  {
+    "id": "v002",
+    "name": "Estadio Azteca",
+    "city": "Mexico City",
+    "country": "Mexico",
+    "capacity": 87523,
+    "address": "Calzada de Tlalpan 3465, Mexico City, CDMX",
+    "latitude": 19.3029,
+    "longitude": -99.1505,
+    "nearest_transit": "Metro Línea 2 — Tasqueña Station (15 min shuttle)",
+    "parking_zones": ["P-Norte", "P-Sur", "P-Oriente", "P-VIP"],
+    "accessibility_services": [
+      "Accessible seating — Level 0 zones",
+      "Elevator access to all levels",
+      "Audio description headsets at information desk",
+      "Wheelchair rental available at Gate Sur",
+      "Tactile ground surface guides"
+    ],
+    "gates": [
+      {"id": "g11", "name": "Puerta Norte", "location": "North", "accessible": true, "open_time": "15:30"},
+      {"id": "g12", "name": "Puerta Sur", "location": "South", "accessible": true, "open_time": "15:30"},
+      {"id": "g13", "name": "Puerta Oriente", "location": "East", "accessible": false, "open_time": "16:00"},
+      {"id": "g14", "name": "Puerta VIP", "location": "West", "accessible": true, "open_time": "14:30"}
+    ],
+    "zones": [
+      {"id": "z21", "name": "Tribuna Norte", "type": "seating", "capacity": 22000, "level": 0, "accessible": true},
+      {"id": "z22", "name": "Tribuna Sur", "type": "seating", "capacity": 22000, "level": 0, "accessible": true},
+      {"id": "z23", "name": "Tribuna Oriente", "type": "seating", "capacity": 20000, "level": 1, "accessible": false},
+      {"id": "z24", "name": "Palco VIP", "type": "seating", "capacity": 3000, "level": 2, "accessible": true},
+      {"id": "z25", "name": "Zona Comida Central", "type": "food", "capacity": 2000, "level": 0, "accessible": true},
+      {"id": "z26", "name": "Enfermería", "type": "medical", "capacity": 60, "level": 0, "accessible": true},
+      {"id": "z27", "name": "Concourse Principal", "type": "concourse", "capacity": 10000, "level": 0, "accessible": true}
+    ],
+    "food_courts": [
+      {
+        "id": "fc11", "name": "Sabores del Mundo", "zone_id": "z25",
+        "cuisine_types": ["Mexican", "American", "Spanish", "Argentine"],
+        "halal_available": true, "vegetarian_available": true, "wait_time_minutes": 15
+      }
+    ]
+  },
+  {
+    "id": "v003",
+    "name": "BC Place",
+    "city": "Vancouver",
+    "country": "Canada",
+    "capacity": 54500,
+    "address": "777 Pacific Blvd, Vancouver, BC V6B 4Y8",
+    "latitude": 49.2768,
+    "longitude": -123.1116,
+    "nearest_transit": "SkyTrain — Stadium-Chinatown Station (2 min walk)",
+    "parking_zones": ["P-East", "P-West", "P-VIP"],
+    "accessibility_services": [
+      "Full wheelchair accessibility on all levels",
+      "Hearing loop system throughout",
+      "Dedicated accessible drop-off at Gate 5",
+      "On-site accessibility coordinator",
+      "Closed captioning screens at concession areas"
+    ],
+    "gates": [
+      {"id": "g21", "name": "Gate 1 North", "location": "North", "accessible": true, "open_time": "16:00"},
+      {"id": "g22", "name": "Gate 3 South", "location": "South", "accessible": true, "open_time": "16:00"},
+      {"id": "g23", "name": "Gate 5 VIP", "location": "East", "accessible": true, "open_time": "15:00"}
+    ],
+    "zones": [
+      {"id": "z31", "name": "Lower Bowl North", "type": "seating", "capacity": 18000, "level": 0, "accessible": true},
+      {"id": "z32", "name": "Lower Bowl South", "type": "seating", "capacity": 18000, "level": 0, "accessible": true},
+      {"id": "z33", "name": "Upper Tier", "type": "seating", "capacity": 15000, "level": 2, "accessible": false},
+      {"id": "z34", "name": "Club Level", "type": "seating", "capacity": 2500, "level": 1, "accessible": true},
+      {"id": "z35", "name": "Concourse Ring", "type": "concourse", "capacity": 6000, "level": 1, "accessible": true},
+      {"id": "z36", "name": "Food Village", "type": "food", "capacity": 1800, "level": 0, "accessible": true},
+      {"id": "z37", "name": "First Aid Centre", "type": "medical", "capacity": 40, "level": 0, "accessible": true}
+    ],
+    "food_courts": [
+      {
+        "id": "fc21", "name": "Pacific Flavours", "zone_id": "z36",
+        "cuisine_types": ["Canadian", "Japanese", "Indian", "Mexican"],
+        "halal_available": true, "vegetarian_available": true, "wait_time_minutes": 6
+      }
+    ]
+  }
+]

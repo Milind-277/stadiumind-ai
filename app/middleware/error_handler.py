@@ -1,4 +1,5 @@
 """app/middleware/error_handler.py — Global exception → JSON response mapping."""
+
 import logging
 import uuid
 from datetime import datetime, timezone
@@ -37,11 +38,15 @@ def register_error_handlers(app: Flask) -> None:
         if request.path.startswith("/api/"):
             return jsonify(_base_error_body("NOT_FOUND", "Resource not found.")), 404
         from flask import render_template
+
         return render_template("errors/404.html"), 404
 
     @app.errorhandler(405)
     def method_not_allowed(e):
-        return jsonify(_base_error_body("METHOD_NOT_ALLOWED", "Method not allowed.")), 405
+        return (
+            jsonify(_base_error_body("METHOD_NOT_ALLOWED", "Method not allowed.")),
+            405,
+        )
 
     @app.errorhandler(500)
     def internal_error(e):
@@ -53,25 +58,38 @@ def register_error_handlers(app: Flask) -> None:
             exc_info=True,
         )
         if request.path.startswith("/api/"):
-            return jsonify(_base_error_body(
-                "INTERNAL_ERROR",
-                f"An unexpected error occurred. Reference: {req_id}"
-            )), 500
+            return (
+                jsonify(
+                    _base_error_body(
+                        "INTERNAL_ERROR",
+                        f"An unexpected error occurred. Reference: {req_id}",
+                    )
+                ),
+                500,
+            )
         from flask import render_template
+
         return render_template("errors/500.html", request_id=req_id), 500
 
     @app.errorhandler(Exception)
     def unhandled_exception(e):
         req_id = str(uuid.uuid4())[:8]
         logger.error(
-            "Uncaught exception: %s", str(e),
+            "Uncaught exception: %s",
+            str(e),
             extra={"request_id": req_id},
             exc_info=True,
         )
         if request.path.startswith("/api/"):
-            return jsonify(_base_error_body(
-                "INTERNAL_ERROR",
-                f"An unexpected error occurred. Reference: {req_id}"
-            )), 500
+            return (
+                jsonify(
+                    _base_error_body(
+                        "INTERNAL_ERROR",
+                        f"An unexpected error occurred. Reference: {req_id}",
+                    )
+                ),
+                500,
+            )
         from flask import render_template
+
         return render_template("errors/500.html", request_id=req_id), 500

@@ -1,7 +1,8 @@
 """app/models/volunteer.py — Volunteer, Task, and Shift domain models."""
+
 from dataclasses import dataclass, field
-from typing import List, Optional
 from enum import Enum
+from typing import List, Optional
 
 
 class TaskStatus(str, Enum):
@@ -27,8 +28,8 @@ class Task:
     zone_name: str
     priority: TaskPriority
     status: TaskStatus
-    assigned_to: str        # volunteer_id
-    created_at: str         # ISO 8601
+    assigned_to: str  # volunteer_id
+    created_at: str  # ISO 8601
     due_by: Optional[str] = None
     completed_at: Optional[str] = None
     ai_guidance: Optional[str] = None
@@ -40,9 +41,9 @@ class Shift:
     volunteer_id: str
     venue_id: str
     zone_id: str
-    start_time: str         # ISO 8601
+    start_time: str  # ISO 8601
     end_time: str
-    role: str               # "crowd_control" | "first_aid" | "wayfinding" | "accreditation"
+    role: str  # "crowd_control" | "first_aid" | "wayfinding" | "accreditation"
 
 
 @dataclass
@@ -56,5 +57,5 @@ class Volunteer:
     skills: List[str]
     languages: List[str]
     shift: Optional[Shift] = None
-    active_tasks: List[str] = field(default_factory=list)   # task IDs
-    status: str = "available"   # "available" | "busy" | "off_duty"
+    active_tasks: List[str] = field(default_factory=list)  # task IDs
+    status: str = "available"  # "available" | "busy" | "off_duty"

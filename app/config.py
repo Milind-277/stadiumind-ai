@@ -3,7 +3,9 @@ app/config.py — Centralised configuration management.
 All settings are read from environment variables (via .env file).
 No hardcoded secrets anywhere in the codebase.
 """
+
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -57,6 +59,7 @@ class Config:
 
 class TestConfig(Config):
     """Isolated configuration for the test suite."""
+
     TESTING = True
     DEBUG = False
     MOCK_AI = True

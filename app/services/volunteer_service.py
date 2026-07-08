@@ -1,13 +1,15 @@
 """app/services/volunteer_service.py — Business logic for the Volunteer persona."""
+
 import logging
 from typing import Dict, List, Optional
 
-from app.ai.decision_engine import DecisionEngine
 from app.ai import ai_service
-from app.repositories.volunteer_repo import VolunteerRepository, TaskRepository
-from app.repositories.incident_repo import IncidentRepository
+from app.ai.decision_engine import DecisionEngine
 from app.models.volunteer import TaskStatus
+from app.repositories.incident_repo import IncidentRepository
+from app.repositories.volunteer_repo import TaskRepository, VolunteerRepository
 from app.utils.datetime_utils import utcnow_iso
+from app.utils.serializers import PRIORITY_ORDER
 
 logger = logging.getLogger(__name__)
 
@@ -29,36 +31,24 @@ class VolunteerService:
             accessibility_needs.append("accessibility_support")
         language = volunteer.languages[0] if volunteer.languages else "English"
 
-        try:
-            context = self.decision_engine.build_context(
-                user_role="volunteer",
-                venue_id=volunteer.venue_id,
-                accessibility_needs=accessibility_needs,
-                language=language,
-            )
-            decision = self.decision_engine.decide(context)
-            logger.info(
-                "Decision support built for volunteer service volunteer_id=%s task_id=%s best_gate=%s",
-                volunteer.id,
-                task.id,
-                decision["best_gate"],
-            )
-            return decision
-        except Exception as exc:
-            logger.exception(
-                "Decision support fallback for volunteer service volunteer_id=%s task_id=%s",
-                volunteer.id,
-                task.id,
-            )
-            return {
-                "best_gate": "Main gate",
-                "navigation_advice": ["Follow the closest marked route to your assigned zone."],
-                "crowd_avoidance": ["Avoid high-density areas until directed otherwise."],
-                "emergency_actions": ["No immediate emergency action required."],
-                "accessibility_recommendations": ["Ask a supervisor for assistance if needed."],
+        return self.decision_engine.safe_decide(
+            user_role="volunteer",
+            venue_id=volunteer.venue_id,
+            accessibility_needs=accessibility_needs,
+            language=language,
+            fallback_overrides={
+                "navigation_advice": [
+                    "Follow the closest marked route to your assigned zone."
+                ],
+                "crowd_avoidance": [
+                    "Avoid high-density areas until directed otherwise."
+                ],
+                "accessibility_recommendations": [
+                    "Ask a supervisor for assistance if needed."
+                ],
                 "transportation_suggestion": "Use the venue's nearest transit option.",
-                "error": str(exc),
-            }
+            },
+        )
 
     def get_volunteer_by_id(self, volunteer_id: str) -> Optional[Dict]:
         """Return a volunteer profile as a JSON-serializable dictionary."""
@@ -73,11 +63,15 @@ class VolunteerService:
             "skills": vol.skills,
             "languages": vol.languages,
             "status": vol.status,
-            "shift": {
-                "role": vol.shift.role,
-                "start_time": vol.shift.start_time,
-                "end_time": vol.shift.end_time,
-            } if vol.shift else None,
+            "shift": (
+                {
+                    "role": vol.shift.role,
+                    "start_time": vol.shift.start_time,
+                    "end_time": vol.shift.end_time,
+                }
+                if vol.shift
+                else None
+            ),
         }
 
     def get_all_volunteers(self) -> List[Dict]:
@@ -96,9 +90,8 @@ class VolunteerService:
 
     def get_tasks_for_volunteer(self, volunteer_id: str) -> List[Dict]:
         """Return all tasks assigned to a volunteer, sorted by priority."""
-        priority_order = {"urgent": 0, "high": 1, "medium": 2, "low": 3}
         tasks = self.tasks.find_by_volunteer(volunteer_id)
-        tasks.sort(key=lambda t: priority_order.get(t.priority.value, 9))
+        tasks.sort(key=lambda t: PRIORITY_ORDER.get(t.priority.value, 9))
         return [
             {
                 "id": t.id,
@@ -141,15 +134,19 @@ class VolunteerService:
         decision_support = self._build_decision_support(vol, task)
 
         try:
-            result = ai_service.ask("volunteer", "volunteer_guidance", {
-                "volunteer_name": vol.name,
-                "zone_name": task.zone_name,
-                "task_title": task.title,
-                "task_description": task.description,
-                "priority": task.priority.value,
-                "skills": ", ".join(vol.skills),
-                "languages": ", ".join(vol.languages),
-            })
+            result = ai_service.ask(
+                "volunteer",
+                "volunteer_guidance",
+                {
+                    "volunteer_name": vol.name,
+                    "zone_name": task.zone_name,
+                    "task_title": task.title,
+                    "task_description": task.description,
+                    "priority": task.priority.value,
+                    "skills": ", ".join(vol.skills),
+                    "languages": ", ".join(vol.languages),
+                },
+            )
             guidance = result.data
             fallback_used = result.fallback_used
         except Exception:
@@ -167,7 +164,10 @@ class VolunteerService:
                     + decision_support["crowd_avoidance"]
                     + decision_support["emergency_actions"]
                 )[:5],
-                "fan_phrases": ["How can I help you today?", "Please follow me, I'll show you the way."],
+                "fan_phrases": [
+                    "How can I help you today?",
+                    "Please follow me, I'll show you the way.",
+                ],
                 "safety_notes": "Keep routes clear and escalate any safety concern immediately.",
                 "escalate_if": "Any situation involving physical danger, medical emergency, or security threat.",
             }
@@ -184,7 +184,14 @@ class VolunteerService:
             "decision_support": decision_support,
         }
 
-    def submit_sos(self, volunteer_id: str, description: str, zone_id: str, zone_name: str, venue_id: str) -> Dict:
+    def submit_sos(
+        self,
+        volunteer_id: str,
+        description: str,
+        zone_id: str,
+        zone_name: str,
+        venue_id: str,
+    ) -> Dict:
         """Submit an SOS escalation creating a new incident."""
         incident_data = {
             "id": f"inc_sos_{utcnow_iso().replace(':', '').replace('-', '')[:14]}",
@@ -202,7 +209,9 @@ class VolunteerService:
         self.incidents.save(incident_data)
         logger.warning(
             "SOS escalation from volunteer %s in zone %s: %s",
-            volunteer_id, zone_name, description[:100]
+            volunteer_id,
+            zone_name,
+            description[:100],
         )
         return {
             "sos_submitted": True,

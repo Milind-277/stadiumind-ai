@@ -2,7 +2,9 @@
 StadiumMind AI — Development Server Entry Point
 Run with: python run.py
 """
+
 import os
+
 from app import create_app
 from app.config import Config
 

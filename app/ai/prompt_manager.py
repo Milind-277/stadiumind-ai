@@ -5,9 +5,10 @@ Security: User content is ALWAYS placed inside a <user_input> XML tag.
 This prevents prompt injection attacks by clearly delineating untrusted input
 from the system instruction in the prompt.
 """
+
 import logging
 import os
-from typing import Dict, Any
+from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -57,13 +58,17 @@ def build(intent: str, context: Dict[str, Any]) -> str:
         FileNotFoundError: If template file is missing.
     """
     if intent not in INTENT_TEMPLATE_MAP:
-        raise KeyError(f"Unknown AI intent: '{intent}'. Valid: {list(INTENT_TEMPLATE_MAP)}")
+        raise KeyError(
+            f"Unknown AI intent: '{intent}'. Valid: {list(INTENT_TEMPLATE_MAP)}"
+        )
 
     template = _load_template(INTENT_TEMPLATE_MAP[intent])
 
     # Sandbox user content — NEVER inject user text directly into the template body
     user_content = context.pop("user_input", "")
-    safe_context = {k: str(v)[:2000] for k, v in context.items()}  # truncate context values
+    safe_context = {
+        k: str(v)[:2000] for k, v in context.items()
+    }  # truncate context values
 
     # Replace {{KEY}} placeholders
     prompt = template

@@ -1,7 +1,10 @@
 """app/repositories/incident_repo.py — JSON-backed Incident repository."""
+
 from typing import Any, Dict, List
 
-from app.models.incident import Incident, IncidentType, SeverityLevel, IncidentStatus
+from app.models.incident import (Incident, IncidentStatus, IncidentType,
+                                 SeverityLevel)
+
 from .json_base import JSONRepository
 
 

@@ -4,6 +4,7 @@ app/ai/response_parser.py — AI response validation and type coercion.
 Each intent has an expected output schema. If the AI response doesn't match,
 this module raises AIOutputInvalidError so the caller can use a fallback.
 """
+
 import logging
 from typing import Any, Dict
 
@@ -47,7 +48,13 @@ def parse(intent: str, raw: Dict[str, Any]) -> Dict[str, Any]:
             raw[key] = str(raw[key])
 
     # Ensure suggestions/steps/recommendations are always lists
-    for list_key in ("suggestions", "steps", "recommendations", "key_points", "action_items"):
+    for list_key in (
+        "suggestions",
+        "steps",
+        "recommendations",
+        "key_points",
+        "action_items",
+    ):
         if list_key in raw and not isinstance(raw[list_key], list):
             raw[list_key] = [str(raw[list_key])]
 
