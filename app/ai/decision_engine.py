@@ -1,11 +1,36 @@
-"""app/ai/decision_engine.py - Backend decision engine for Phase 3.
+"""
+app/ai/decision_engine.py — Deterministic Decision Engine for StadiumMind AI.
 
-Builds a structured context from JSON-backed repositories, generates a
-Gemini-ready prompt, and produces deterministic operational recommendations.
+Responsibilities:
+    * **Context Building**   — assemble live crowd, venue, match, incident, and
+                               weather data into a structured :class:`DecisionContext`.
+    * **Prompt Generation**  — convert a :class:`DecisionContext` into a Gemini-ready
+                               structured prompt via :class:`PromptBuilder`.
+    * **Decision Making**    — produce deterministic operational recommendations
+                               (gate selection, crowd avoidance, navigation, emergency
+                               actions, accessibility, transportation) without an AI call.
+    * **Fallback Safety**    — :meth:`DecisionEngine.safe_decide` guarantees a valid
+                               response even when venue data is unavailable.
+
+This module is the single source of truth for operational decision logic and is
+consumed by all four persona services.
 """
 
+import logging
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, Optional
+
+from app.constants import (
+    CROWD_CRITICAL_THRESHOLD,
+    CROWD_CRITICAL_ZONE_COUNT,
+    CROWD_HIGH_THRESHOLD,
+    CROWD_MODERATE_THRESHOLD,
+    FALLBACK_GATE_NAME,
+    MAX_ACCESSIBILITY_ITEMS,
+    MAX_ACCESSIBILITY_RECOMMENDATIONS,
+    MAX_CROWD_AVOIDANCE_TIPS,
+    NO_EMERGENCY_ACTION,
+)
 
 from app.models.crowd import DensityLevel
 from app.models.incident import IncidentType, SeverityLevel
@@ -174,9 +199,17 @@ class ContextBuilder:
         venue_services: Iterable[str],
         user_needs: Iterable[str],
     ) -> List[str]:
-        """Merge venue accessibility services with user-reported needs."""
+        """Merge venue accessibility services with user-reported needs.
+
+        Args:
+            venue_services: Services offered by the venue.
+            user_needs:     Specific needs reported by the requesting user.
+
+        Returns:
+            De-duplicated list capped at :data:`~app.constants.MAX_ACCESSIBILITY_ITEMS`.
+        """
         merged = list(dict.fromkeys([*venue_services, *user_needs]))
-        return merged[:10]
+        return merged[:MAX_ACCESSIBILITY_ITEMS]
 
     def _build_weather_context(self, city: str) -> Dict[str, Any]:
         """Return deterministic mock weather for the venue city."""
@@ -232,12 +265,24 @@ class ContextBuilder:
         occupancy_pct: float,
         high_density_zones: List[Dict[str, Any]],
     ) -> str:
-        """Map crowd load to a simple operational severity label."""
-        if occupancy_pct >= 90 or len(high_density_zones) >= 2:
+        """Map crowd load to a simple operational severity label.
+
+        Uses :data:`~app.constants.CROWD_CRITICAL_THRESHOLD`,
+        :data:`~app.constants.CROWD_HIGH_THRESHOLD`, and
+        :data:`~app.constants.CROWD_MODERATE_THRESHOLD`.
+
+        Args:
+            occupancy_pct:      Overall venue occupancy percentage.
+            high_density_zones: List of zones with high or critical density.
+
+        Returns:
+            One of ``"critical"``, ``"high"``, ``"moderate"``, or ``"low"``.
+        """
+        if occupancy_pct >= CROWD_CRITICAL_THRESHOLD or len(high_density_zones) >= CROWD_CRITICAL_ZONE_COUNT:
             return "critical"
-        if occupancy_pct >= 75 or high_density_zones:
+        if occupancy_pct >= CROWD_HIGH_THRESHOLD or high_density_zones:
             return "high"
-        if occupancy_pct >= 50:
+        if occupancy_pct >= CROWD_MODERATE_THRESHOLD:
             return "moderate"
         return "low"
 
@@ -327,7 +372,25 @@ class DecisionEngine:
         language: str = "English",
         fallback_overrides: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        """Build context and decide, with a guaranteed fallback if it fails."""
+        """Build context and decide, guaranteeing a valid response on failure.
+
+        This method is the single safe entry point for all persona services.
+        It never raises — any exception is caught, logged, and replaced with a
+        structured fallback that can be overridden per-persona.
+
+        Args:
+            user_role:           Persona role (``"fan"``, ``"organizer"``, etc.).
+            venue_id:            Target venue identifier.
+            accessibility_needs: Optional list of accessibility requirements.
+            language:            Preferred language for recommendations.
+            fallback_overrides:  Optional dict merged into the fallback response
+                                 to supply persona-specific default values.
+
+        Returns:
+            Decision support dict with gate, navigation, crowd-avoidance,
+            emergency, accessibility, and transportation recommendations.
+        """
+        _log = logging.getLogger(__name__)
         try:
             context = self.build_context(
                 user_role=user_role,
@@ -336,9 +399,7 @@ class DecisionEngine:
                 language=language,
             )
             decision = self.decide(context)
-            import logging
-
-            logging.getLogger(__name__).info(
+            _log.info(
                 "Decision support built for %s service venue_id=%s best_gate=%s",
                 user_role,
                 venue_id,
@@ -346,24 +407,24 @@ class DecisionEngine:
             )
             return decision
         except Exception as exc:
-            import logging
-
-            logging.getLogger(__name__).exception(
+            _log.exception(
                 "Decision support fallback for %s service venue_id=%s",
                 user_role,
                 venue_id,
             )
-            fallback = {
-                "best_gate": "Main gate",
+            fallback: Dict[str, Any] = {
+                "best_gate": FALLBACK_GATE_NAME,
                 "navigation_advice": ["Follow on-site signage and staff directions."],
                 "crowd_avoidance": [
                     "Avoid the busiest concourses during peak movement."
                 ],
-                "emergency_actions": ["No immediate emergency action required."],
+                "emergency_actions": [NO_EMERGENCY_ACTION],
                 "accessibility_recommendations": [
                     "Request help from venue staff if needed."
                 ],
-                "transportation_suggestion": "Use public transit or the venue's nearest transport option.",
+                "transportation_suggestion": (
+                    "Use public transit or the venue's nearest transport option."
+                ),
                 "error": str(exc),
             }
             if fallback_overrides:
@@ -409,7 +470,23 @@ class DecisionEngine:
         accessibility_needs: List[str],
         crowd_status: Dict[str, Any],
     ) -> str:
-        """Pick the most suitable gate based on access and congestion."""
+        """Pick the most suitable gate based on accessibility needs and congestion.
+
+        Selection priority:
+            1. Accessible gate (when accessibility needs are present).
+            2. Gate furthest from known bottleneck zones.
+            3. First accessible gate.
+            4. First gate in the venue list.
+            5. :data:`~app.constants.FALLBACK_GATE_NAME` when no gate data exists.
+
+        Args:
+            venue:               Venue context dict.
+            accessibility_needs: List of active accessibility requirements.
+            crowd_status:        Current crowd status dict.
+
+        Returns:
+            Gate name string.
+        """
         gates = venue.get("gates", [])
         accessible_gates = [gate for gate in gates if gate.get("accessible")]
         if accessibility_needs and accessible_gates:
@@ -423,7 +500,7 @@ class DecisionEngine:
 
         if accessible_gates:
             return accessible_gates[0]["name"]
-        return gates[0]["name"] if gates else "Main gate"
+        return gates[0]["name"] if gates else FALLBACK_GATE_NAME
 
     def _gate_away_from_bottlenecks(
         self,
@@ -460,7 +537,16 @@ class DecisionEngine:
         crowd_status: Dict[str, Any],
         venue: Dict[str, Any],
     ) -> List[str]:
-        """Recommend zones and patterns to avoid."""
+        """Recommend zones and crowd patterns to avoid.
+
+        Args:
+            crowd_status: Current crowd status dict.
+            venue:        Venue context dict.
+
+        Returns:
+            List of crowd-avoidance tips capped at
+            :data:`~app.constants.MAX_CROWD_AVOIDANCE_TIPS`.
+        """
         avoidance: List[str] = []
         for zone in crowd_status.get("high_density_zones", []):
             avoidance.append(f"Avoid {zone['zone_name']} if possible.")
@@ -470,12 +556,19 @@ class DecisionEngine:
             avoidance.append(
                 f"Avoid the busiest concourses at {venue['name']} during peak movement periods."
             )
-        return avoidance[:4]
+        return avoidance[:MAX_CROWD_AVOIDANCE_TIPS]
 
     def _build_emergency_actions(self, emergency_status: Dict[str, Any]) -> List[str]:
-        """Recommend emergency actions based on active incidents."""
+        """Recommend emergency actions based on active incident status.
+
+        Args:
+            emergency_status: Emergency status dict from :class:`ContextBuilder`.
+
+        Returns:
+            List of emergency action strings.
+        """
         if not emergency_status.get("active"):
-            return ["No immediate emergency action required."]
+            return [NO_EMERGENCY_ACTION]
         actions = ["Follow venue emergency staff instructions immediately."]
         actions.append("Move away from the affected area and keep access routes clear.")
         if emergency_status.get("level") in {"high", "critical"}:
@@ -488,7 +581,17 @@ class DecisionEngine:
         venue: Dict[str, Any],
         best_gate: str,
     ) -> List[str]:
-        """Translate accessibility needs into practical guidance."""
+        """Translate accessibility needs into practical venue guidance.
+
+        Args:
+            accessibility_needs: List of active accessibility requirements.
+            venue:               Venue context dict.
+            best_gate:           Previously selected optimal gate.
+
+        Returns:
+            List of accessibility recommendations capped at
+            :data:`~app.constants.MAX_ACCESSIBILITY_RECOMMENDATIONS`.
+        """
         recommendations = [
             f"Use {best_gate}, which is the preferred accessible entry point."
         ]
@@ -503,7 +606,7 @@ class DecisionEngine:
             recommendations.append(
                 "Use the venue's accessibility services if assistance is needed."
             )
-        return recommendations[:4]
+        return recommendations[:MAX_ACCESSIBILITY_RECOMMENDATIONS]
 
     def _build_transportation_suggestion(
         self,

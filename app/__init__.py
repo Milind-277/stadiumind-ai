@@ -1,8 +1,10 @@
 """
 app/__init__.py — Flask Application Factory.
 
-Creates and configures the Flask app. Registers all blueprints,
-middleware, error handlers, and security headers.
+Creates and configures the Flask application instance.  Registers all
+blueprints, middleware, error handlers, and security headers in a single,
+well-ordered factory function so that the application is trivially testable
+and free of module-level side effects.
 """
 
 import logging
@@ -11,11 +13,19 @@ import os
 from flask import Flask
 
 from app.config import Config
+from app.constants import CSP_VALUE, LOG_DATE_FORMAT, LOG_FORMAT
 
 
-def create_app(config_class=Config) -> Flask:
-    """Create and configure the Flask application."""
+def create_app(config_class: type = Config) -> Flask:
+    """Create and configure the Flask application.
 
+    Args:
+        config_class: A configuration class (default :class:`Config`).
+            Pass :class:`TestConfig` in the test suite for isolation.
+
+    Returns:
+        A fully-configured :class:`flask.Flask` instance.
+    """
     config_class.validate()
 
     app = Flask(
@@ -38,21 +48,20 @@ def create_app(config_class=Config) -> Flask:
     # ── Security Headers ───────────────────────────────────────────────────────
     @app.after_request
     def add_security_headers(response):
+        """Attach security headers to every outgoing response."""
         for header, value in config_class.SECURITY_HEADERS.items():
             response.headers[header] = value
-        response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; "
-            "font-src 'self' https://fonts.gstatic.com; "
-            "img-src 'self' data:; "
-            "connect-src 'self';"
-        )
+        response.headers["Content-Security-Policy"] = CSP_VALUE
         return response
 
     # ── Register Blueprints ────────────────────────────────────────────────────
-    from app.blueprints import (core_bp, fan_bp, organizer_bp, security_bp,
-                                volunteer_bp)
+    from app.blueprints import (  # noqa: PLC0415
+        core_bp,
+        fan_bp,
+        organizer_bp,
+        security_bp,
+        volunteer_bp,
+    )
 
     app.register_blueprint(core_bp)
     app.register_blueprint(fan_bp)
@@ -61,14 +70,14 @@ def create_app(config_class=Config) -> Flask:
     app.register_blueprint(security_bp)
 
     # ── Register Middleware ────────────────────────────────────────────────────
-    from app.middleware.error_handler import register_error_handlers
-    from app.middleware.request_logger import register_request_logger
+    from app.middleware.error_handler import register_error_handlers  # noqa: PLC0415
+    from app.middleware.request_logger import register_request_logger  # noqa: PLC0415
 
     register_error_handlers(app)
     register_request_logger(app)
 
     # ── Jinja2 Global Helpers ──────────────────────────────────────────────────
-    from app.utils.datetime_utils import format_match_time, time_until
+    from app.utils.datetime_utils import format_match_time, time_until  # noqa: PLC0415
 
     app.jinja_env.globals.update(
         format_match_time=format_match_time,
@@ -86,9 +95,14 @@ def create_app(config_class=Config) -> Flask:
 
 
 def _configure_logging(config_class: type) -> None:
-    """Configure structured logging."""
+    """Configure structured logging for the application.
+
+    Args:
+        config_class: The active configuration class, used to read
+            ``LOG_LEVEL``, ``LOG_TO_FILE``, and ``LOG_FILE`` settings.
+    """
     level = getattr(logging, config_class.LOG_LEVEL.upper(), logging.INFO)
-    handlers = [logging.StreamHandler()]
+    handlers: list[logging.Handler] = [logging.StreamHandler()]
 
     if config_class.LOG_TO_FILE:
         os.makedirs(os.path.dirname(config_class.LOG_FILE), exist_ok=True)
@@ -96,7 +110,7 @@ def _configure_logging(config_class: type) -> None:
 
     logging.basicConfig(
         level=level,
-        format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
-        datefmt="%Y-%m-%dT%H:%M:%S",
+        format=LOG_FORMAT,
+        datefmt=LOG_DATE_FORMAT,
         handlers=handlers,
     )
